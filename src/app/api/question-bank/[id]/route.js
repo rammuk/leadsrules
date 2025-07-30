@@ -44,30 +44,44 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params
-    const { question, displayType, isMultiSelect, options } = await request.json()
+    const { question, questionType, displayType, isMultiSelect, options, validationRules } = await request.json()
 
-    if (!question || !options || !Array.isArray(options)) {
-      return NextResponse.json({ error: 'Question and options are required' }, { status: 400 })
+    if (!question) {
+      return NextResponse.json({ error: 'Question text is required' }, { status: 400 })
     }
 
-    // Delete existing options and recreate them
-    await prisma.questionOption.deleteMany({
-      where: { questionBankId: id }
-    })
+    // For options type, validate options
+    if (questionType === 'options' && (!options || !Array.isArray(options) || options.length === 0)) {
+      return NextResponse.json({ error: 'At least one option is required for multiple choice questions' }, { status: 400 })
+    }
+
+    // Delete existing options if changing from options type to another type
+    if (questionType !== 'options') {
+      await prisma.questionOption.deleteMany({
+        where: { questionBankId: id }
+      })
+    } else {
+      // Delete existing options and recreate them for options type
+      await prisma.questionOption.deleteMany({
+        where: { questionBankId: id }
+      })
+    }
 
     const updatedQuestion = await prisma.questionBank.update({
       where: { id },
       data: {
         question,
+        questionType: questionType || 'options',
         displayType: displayType || 'list',
         isMultiSelect: isMultiSelect || false,
-        options: {
+        validationRules: validationRules || null,
+        options: questionType === 'options' ? {
           create: options.map((option, index) => ({
             description: option.description,
             image: option.image || null,
             order: index
           }))
-        }
+        } : undefined
       },
       include: {
         options: {

@@ -37,24 +37,31 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { question, displayType, isMultiSelect, options } = await request.json()
+    const { question, questionType, displayType, isMultiSelect, options, validationRules } = await request.json()
 
-    if (!question || !options || !Array.isArray(options)) {
-      return NextResponse.json({ error: 'Question and options are required' }, { status: 400 })
+    if (!question) {
+      return NextResponse.json({ error: 'Question text is required' }, { status: 400 })
     }
 
-    const questionBank = await prisma.questionBank.create({
+    // For options type, validate options
+    if (questionType === 'options' && (!options || !Array.isArray(options) || options.length === 0)) {
+      return NextResponse.json({ error: 'At least one option is required for multiple choice questions' }, { status: 400 })
+    }
+
+    const newQuestion = await prisma.questionBank.create({
       data: {
         question,
+        questionType: questionType || 'options',
         displayType: displayType || 'list',
         isMultiSelect: isMultiSelect || false,
-        options: {
+        validationRules: validationRules || null,
+        options: questionType === 'options' ? {
           create: options.map((option, index) => ({
             description: option.description,
             image: option.image || null,
             order: index
           }))
-        }
+        } : undefined
       },
       include: {
         options: {
@@ -63,7 +70,7 @@ export async function POST(request) {
       }
     })
 
-    return NextResponse.json(questionBank, { status: 201 })
+    return NextResponse.json(newQuestion)
   } catch (error) {
     console.error('Error creating question:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
