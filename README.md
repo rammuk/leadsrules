@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LeadsRules - Next.js with Authentication
 
-## Getting Started
+A Next.js application with NextAuth.js v4 authentication, PostgreSQL database, and admin console.
 
-First, run the development server:
+## Features
+
+- ✅ **NextAuth.js v4** - Secure authentication
+- ✅ **PostgreSQL Database** - User and session storage
+- ✅ **Admin Console** - Protected admin dashboard
+- ✅ **Chakra UI v3** - Modern UI components
+- ✅ **Email/Password Login** - Credentials authentication
+- ✅ **Role-based Access** - Admin and user roles
+
+## Quick Start
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Set up PostgreSQL Database
+
+You need a PostgreSQL database running. You can use:
+- Local PostgreSQL installation
+- Docker: `docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres`
+- Cloud service (Supabase, Railway, etc.)
+
+### 3. Configure Environment Variables
+
+Create `.env.local` with:
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/leadsrules"
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 4. Set up Database
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Create database tables
+npx prisma db push
+
+# Seed admin user
+npm run seed
+```
+
+### 5. Start Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Admin Access
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+**Default Admin Credentials:**
+- **Email:** `admin@leadsrules.com`
+- **Password:** `admin123`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+src/
+├── app/
+│   ├── admin/           # Admin console (protected)
+│   ├── auth/signin/     # Login page
+│   ├── api/auth/        # NextAuth.js API routes
+│   └── page.js          # Home page
+├── components/          # Reusable components
+└── lib/
+    └── db.js           # Database utilities
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Database Schema
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application uses Prisma with the following models:
+- **User** - User accounts with roles
+- **Account** - OAuth accounts (for future use)
+- **Session** - User sessions
+- **VerificationToken** - Email verification tokens
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Available Scripts
 
-## Deploy on Vercel
+- `npm run dev` - Start development server
+- `npm run dev:turbo` - Start with Turbopack
+- `npm run build` - Build for production
+- `npm run seed` - Seed database with admin user
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Authentication Flow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Login Page** (`/auth/signin`) - Email/password authentication
+2. **Admin Console** (`/admin`) - Protected admin dashboard
+3. **Home Page** (`/`) - Shows login status and admin link
+
+## Security Features
+
+- ✅ Password hashing with bcryptjs
+- ✅ JWT session strategy
+- ✅ Role-based access control
+- ✅ Protected routes
+- ✅ Secure environment variables
+
+## Next Steps
+
+- Add user registration
+- Implement email verification
+- Add OAuth providers (Google, GitHub)
+- Create user management in admin console
+- Add audit logs
+- Implement password reset functionality
