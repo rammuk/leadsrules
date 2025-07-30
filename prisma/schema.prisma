@@ -109,3 +109,27 @@ model Response {
   answers         Json     // Store answers as JSON
   createdAt       DateTime @default(now())
 }
+
+// Question Bank Models
+model QuestionBank {
+  id          String   @id @default(cuid())
+  question    String
+  displayType String   @default("list") // "list" or "cards"
+  isMultiSelect Boolean @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  options QuestionOption[]
+}
+
+model QuestionOption {
+  id           String   @id @default(cuid())
+  questionBankId String
+  questionBank QuestionBank @relation(fields: [questionBankId], references: [id], onDelete: Cascade)
+  description  String
+  image        String?  // URL to external image
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

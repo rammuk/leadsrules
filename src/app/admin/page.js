@@ -30,10 +30,11 @@ export default async function AdminPage() {
   }
 
   // Fetch statistics
-  const [websitesCount, questionnairesCount, responsesCount] = await Promise.all([
+  const [websitesCount, questionnairesCount, responsesCount, questionsCount] = await Promise.all([
     prisma.website.count(),
     prisma.questionnaire.count(),
-    prisma.response.count()
+    prisma.response.count(),
+    prisma.questionBank.count()
   ])
 
   return (
@@ -93,9 +94,9 @@ export default async function AdminPage() {
           <Card.Root>
             <Card.Body>
               <VStack align="start" gap="2">
-                <Text fontSize="sm" color="fg.muted">System Status</Text>
-                <Badge colorPalette="green">Online</Badge>
-                <Text fontSize="sm" color="fg.muted">All systems operational</Text>
+                <Text fontSize="sm" color="fg.muted">Question Bank</Text>
+                <Text fontSize="2xl" fontWeight="bold">{questionsCount}</Text>
+                <Text fontSize="sm" color="fg.muted">Available questions</Text>
               </VStack>
             </Card.Body>
           </Card.Root>
@@ -117,9 +118,14 @@ export default async function AdminPage() {
               <Button as={Link} href="/admin/websites/new" colorPalette="blue">
                 Add New Website
               </Button>
+              <Button as={Link} href="/admin/question-bank" variant="outline">
+                Question Bank
+              </Button>
+              <Button as={Link} href="/admin/question-bank/new" colorPalette="blue">
+                Add Question
+              </Button>
               <Button variant="outline">System Settings</Button>
               <Button variant="outline">View Logs</Button>
-              <Button variant="outline">Backup Database</Button>
             </HStack>
           </Card.Body>
         </Card.Root>
