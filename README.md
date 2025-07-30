@@ -1,15 +1,19 @@
-# LeadsRules - Next.js with Authentication
+# LeadRules Admin Console
 
-A Next.js application with NextAuth.js v4 authentication, PostgreSQL database, and admin console.
+A comprehensive admin console built with Next.js, Chakra UI, and NextAuth.js for managing questionnaires across multiple websites.
 
 ## Features
 
 - ✅ **NextAuth.js v4** - Secure authentication
 - ✅ **PostgreSQL Database** - User and session storage
-- ✅ **Admin Console** - Protected admin dashboard
+- ✅ **Admin Console** - Protected admin dashboard with statistics
+- ✅ **Website Management** - Create and manage multiple websites
+- ✅ **Questionnaire System** - Build and deploy questionnaires
+- ✅ **Response Collection** - Collect user responses from frontend websites
 - ✅ **Chakra UI v3** - Modern UI components
 - ✅ **Email/Password Login** - Credentials authentication
 - ✅ **Role-based Access** - Admin and user roles
+- ✅ **Multi-tenant Architecture** - Each website has unique identifier
 
 ## Quick Start
 
@@ -80,6 +84,23 @@ The application uses Prisma with the following models:
 - **Account** - OAuth accounts (for future use)
 - **Session** - User sessions
 - **VerificationToken** - Email verification tokens
+- **Website** - Frontend websites with unique identifiers
+- **Questionnaire** - Questionnaires associated with websites
+- **Question** - Individual questions within questionnaires
+- **Response** - User responses to questionnaires
+
+## API Endpoints
+
+### Admin API (Protected)
+- `GET /api/websites` - List all websites
+- `POST /api/websites` - Create new website
+- `GET /api/websites/[id]` - Get website details
+- `PUT /api/websites/[id]` - Update website
+- `DELETE /api/websites/[id]` - Delete website
+
+### Public API (For Frontend Websites)
+- `GET /api/public/websites/[identifier]/questionnaires` - Get questionnaires for a website
+- `POST /api/public/websites/[identifier]/questionnaires/[id]/responses` - Submit questionnaire response
 
 ## Available Scripts
 
@@ -102,11 +123,47 @@ The application uses Prisma with the following models:
 - ✅ Protected routes
 - ✅ Secure environment variables
 
+## Admin Console Features
+
+### Dashboard
+- Real-time statistics (websites, questionnaires, responses)
+- Quick action buttons for common tasks
+- System status overview
+
+### Website Management
+- View all websites with questionnaire counts
+- Add new websites with unique identifiers
+- Edit website details (name, identifier, active status)
+- Delete websites (only if no questionnaires exist)
+
+### Security
+- Admin-only access to all management features
+- Protected API endpoints
+- Session-based authentication
+
+## Frontend Integration
+
+Frontend websites can connect to the system using their unique identifier:
+
+```javascript
+// Example: Fetch questionnaires for a website
+const response = await fetch('/api/public/websites/my-website/questionnaires');
+const data = await response.json();
+
+// Example: Submit a questionnaire response
+const response = await fetch('/api/public/websites/my-website/questionnaires/123/responses', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    answers: { question1: 'answer1', question2: 'answer2' }
+  })
+});
+```
+
 ## Next Steps
 
-- Add user registration
-- Implement email verification
-- Add OAuth providers (Google, GitHub)
-- Create user management in admin console
-- Add audit logs
-- Implement password reset functionality
+1. **Questionnaire Builder** - Create the questionnaire creation interface
+2. **Response Analytics** - Build analytics dashboard for responses
+3. **API Documentation** - Create comprehensive API documentation
+4. **Frontend SDK** - Provide SDK for frontend websites
+5. **Advanced Features** - Export functionality, advanced analytics

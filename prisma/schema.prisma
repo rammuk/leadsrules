@@ -63,3 +63,49 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Website {
+  id          String   @id @default(cuid())
+  name        String
+  identifier  String   @unique // Unique identifier for frontend websites
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questionnaires Questionnaire[]
+}
+
+model Questionnaire {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  websiteId   String
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions Question[]
+  responses Response[]
+}
+
+model Question {
+  id              String   @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  text            String
+  type            String   // "text", "textarea", "select", "radio", "checkbox"
+  options         String?  // JSON string for select/radio/checkbox options
+  isRequired      Boolean  @default(false)
+  order           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Response {
+  id              String   @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  answers         Json     // Store answers as JSON
+  createdAt       DateTime @default(now())
+}
