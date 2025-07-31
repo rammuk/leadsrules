@@ -118,6 +118,12 @@ export default async function AdminPage() {
               <Button as={Link} href="/admin/websites/new" colorPalette="blue">
                 Add New Website
               </Button>
+              <Button as={Link} href="/admin/questionnaires" variant="outline">
+                Manage Questionnaires
+              </Button>
+              <Button as={Link} href="/admin/questionnaires/new" colorPalette="blue">
+                Create Questionnaire
+              </Button>
               <Button as={Link} href="/admin/question-bank" variant="outline">
                 Question Bank
               </Button>

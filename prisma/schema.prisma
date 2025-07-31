@@ -74,22 +74,41 @@ model Questionnaire {
   websiteId   String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  questions   Question[]
+  steps       QuestionnaireStep[]
   website     Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   responses   Response[]
 }
 
-model Question {
+model QuestionnaireStep {
   id              String        @id @default(cuid())
   questionnaireId String
-  text            String
-  type            String
-  options         String?
-  isRequired      Boolean       @default(false)
+  title           String
+  description     String?
   order           Int
+  isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  questions       StepQuestion[]
+}
+
+model StepQuestion {
+  id                  String            @id @default(cuid())
+  stepId              String
+  question            String            // Duplicated question text
+  questionType        String            @default("options") // "options", "date", "text", "textarea"
+  displayType         String            @default("list") // "list" or "cards"
+  isMultiSelect       Boolean           @default(false)
+  isRequired          Boolean           @default(false) // Can be different from question bank
+  validationRules     Json?             // Duplicated validation rules
+  order               Int
+  isActive            Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  step                QuestionnaireStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  options             StepQuestionOption[]
+  questionBankId      String?           // Reference to original question (optional)
+  questionBank        QuestionBank?     @relation(fields: [questionBankId], references: [id])
 }
 
 model Response {
@@ -111,6 +130,7 @@ model QuestionBank {
   questionType  String           @default("options")
   validationRules Json?          // Store validation rules as JSON
   options       QuestionOption[]
+  stepQuestions StepQuestion[]
 }
 
 model QuestionOption {
@@ -122,4 +142,15 @@ model QuestionOption {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   questionBank   QuestionBank @relation(fields: [questionBankId], references: [id], onDelete: Cascade)
+}
+
+model StepQuestionOption {
+  id              String        @id @default(cuid())
+  stepQuestionId  String
+  description     String
+  image           String?
+  order           Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  stepQuestion    StepQuestion  @relation(fields: [stepQuestionId], references: [id], onDelete: Cascade)
 }
