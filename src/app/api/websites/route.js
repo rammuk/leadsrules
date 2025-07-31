@@ -14,7 +14,7 @@ export async function GET() {
 
     const websites = await prisma.website.findMany({
       include: {
-        questionnaire: true
+        questionnaires: true
       },
       orderBy: { createdAt: 'desc' }
     })

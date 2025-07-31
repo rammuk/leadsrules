@@ -19,7 +19,7 @@ export default async function EditWebsitePage({ params }) {
     redirect('/')
   }
 
-  const { id } = params
+  const { id } = await params
 
   const website = await prisma.website.findUnique({
     where: { id }
