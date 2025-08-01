@@ -13,7 +13,10 @@
     "import-all-geoip": "node scripts/import-all-geoip-data.js",
     "import-complete-geoip": "node scripts/import-complete-geoip-data.js",
     "geoip-stats": "node scripts/geoip-stats.js",
-    "verify-geoip": "node scripts/verify-geoip-coverage.js"
+    "verify-geoip": "node scripts/verify-geoip-coverage.js",
+    "sync-to-production": "node scripts/sync-db-to-production.js",
+    "push-schema": "node scripts/push-schema-to-production.js",
+    "view-production": "node scripts/view-production-db.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
