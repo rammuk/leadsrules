@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next"
 import { redirect } from "next/navigation"
 import { authOptions } from "../api/auth/[...nextauth]/route"
-import { prisma } from "../../lib/db"
+import { prisma } from "../../lib/prisma"
 import {
   Box,
   Button,
@@ -12,9 +12,11 @@ import {
   VStack,
   Badge,
   Grid,
+  Table,
 } from "@chakra-ui/react"
 import { ColorModeButton } from "../../components/ui/color-mode"
 import SignOutButton from "../../components/ui/sign-out-button"
+import DeleteWebsiteButton from "../../components/ui/DeleteWebsiteButton"
 import { ClientOnly, Skeleton } from "@chakra-ui/react"
 import Link from "next/link"
 
@@ -29,12 +31,22 @@ export default async function AdminPage() {
     redirect('/')
   }
 
-  // Fetch statistics
-  const [websitesCount, questionnairesCount, responsesCount, questionsCount] = await Promise.all([
+  // Fetch statistics and websites
+  const [websitesCount, questionnairesCount, responsesCount, questionsCount, websites] = await Promise.all([
     prisma.website.count(),
     prisma.questionnaire.count(),
     prisma.response.count(),
-    prisma.questionBank.count()
+    prisma.questionBank.count(),
+    prisma.website.findMany({
+      include: {
+        _count: {
+          select: {
+            questionnaires: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
   ])
 
   return (
@@ -133,6 +145,96 @@ export default async function AdminPage() {
               <Button variant="outline">System Settings</Button>
               <Button variant="outline">View Logs</Button>
             </HStack>
+          </Card.Body>
+        </Card.Root>
+
+        {/* Websites Table */}
+        <Card.Root>
+          <Card.Header>
+            <Card.Title>Recent Websites</Card.Title>
+            <Card.Description>
+              Quick access to manage your websites
+            </Card.Description>
+          </Card.Header>
+          <Card.Body>
+            {websites.length > 0 ? (
+              <Table.Root>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeader>Name</Table.ColumnHeader>
+                    <Table.ColumnHeader>Identifier</Table.ColumnHeader>
+                    <Table.ColumnHeader>Phone</Table.ColumnHeader>
+                    <Table.ColumnHeader>Questionnaires</Table.ColumnHeader>
+                    <Table.ColumnHeader>Status</Table.ColumnHeader>
+                    <Table.ColumnHeader>Actions</Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {websites.map((website) => (
+                    <Table.Row key={website.id}>
+                      <Table.Cell>
+                        <Text fontWeight="medium">{website.name}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text fontSize="sm" color="fg.muted">{website.identifier}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text fontSize="sm" color="fg.muted">
+                          {website.phone || '-'}
+                        </Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge colorPalette="blue" variant="subtle">
+                          {website._count.questionnaires}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge 
+                          colorPalette={website.isActive ? "green" : "gray"} 
+                          variant="subtle"
+                        >
+                          {website.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <HStack gap="2">
+                          <Button
+                            as={Link}
+                            href={`/public?website=${website.identifier}`}
+                            size="sm"
+                            variant="outline"
+                            colorPalette="green"
+                            target="_blank"
+                          >
+                            View
+                          </Button>
+                          <Button
+                            as={Link}
+                            href={`/admin/websites/${website.id}/edit`}
+                            size="sm"
+                            variant="outline"
+                            colorPalette="blue"
+                          >
+                            Edit
+                          </Button>
+                          <DeleteWebsiteButton 
+                            websiteId={website.id} 
+                            websiteName={website.name} 
+                          />
+                        </HStack>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+            ) : (
+              <VStack gap="4" py="8">
+                <Text color="fg.muted">No websites found</Text>
+                <Button as={Link} href="/admin/websites/new" colorPalette="blue">
+                  Create First Website
+                </Button>
+              </VStack>
+            )}
           </Card.Body>
         </Card.Root>
       </VStack>

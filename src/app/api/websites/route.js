@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]/route'
-import { prisma } from '../../../lib/db'
+import { prisma } from '../../../lib/prisma'
 
 // GET /api/websites - Get all websites
 export async function GET() {
@@ -35,7 +35,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, identifier } = await request.json()
+    const { name, identifier, phone, logo, isActive } = await request.json()
 
     if (!name || !identifier) {
       return NextResponse.json({ error: 'Name and identifier are required' }, { status: 400 })
@@ -53,7 +53,10 @@ export async function POST(request) {
     const website = await prisma.website.create({
       data: {
         name,
-        identifier
+        identifier,
+        phone,
+        logo,
+        isActive: isActive ?? true
       }
     })
 

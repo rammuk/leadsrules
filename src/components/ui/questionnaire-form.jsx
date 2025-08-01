@@ -39,18 +39,21 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
   const [newStepData, setNewStepData] = useState({
     title: '',
     description: '',
-    isActive: true
+    isActive: true,
+    leaveBehindStrategy: false
   })
   const [viewStepModalIsOpen, setViewStepModalIsOpen] = useState(false)
   const [viewingStepIndex, setViewingStepIndex] = useState(null)
   const [editingStepData, setEditingStepData] = useState({
     title: '',
     description: '',
-    isActive: true
+    isActive: true,
+    leaveBehindStrategy: false
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [draggedQuestion, setDraggedQuestion] = useState(null)
   const [editingQuestionIndex, setEditingQuestionIndex] = useState(null)
+  const [questionnaireCreated, setQuestionnaireCreated] = useState(mode === 'edit')
   const router = useRouter()
   let websitesCollection = null
 
@@ -69,10 +72,23 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
   }, [isOpen, onClose])
 
   useEffect(() => {
-    fetchWebsites()
-    fetchQuestionBank()
-    
-    if (mode === 'edit' && questionnaire) {
+    if (mode === 'create') {
+      fetchWebsites()
+    } else if (mode === 'edit' && questionnaire) {
+      // For edit mode, create a websites collection with just the connected website
+      const connectedWebsite = {
+        id: questionnaire.websiteId,
+        name: questionnaire.website?.name || 'Unknown Website'
+      }
+      
+      websitesCollection = createListCollection({
+        items: [{
+          label: connectedWebsite.name,
+          value: connectedWebsite.id
+        }],
+      })
+      setWebsites(websitesCollection)
+      
       setFormData({
         title: questionnaire.title,
         description: questionnaire.description || '',
@@ -83,6 +99,7 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
           title: step.title,
           description: step.description || '',
           isActive: step.isActive,
+          leaveBehindStrategy: step.leaveBehindStrategy || false,
           order: step.order,
           questions: Array.isArray(step.questions) ? step.questions.map(q => ({
             id: q.id,
@@ -105,6 +122,8 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
         })) : []
       })
     }
+    
+    fetchQuestionBank()
   }, [mode, questionnaire])
 
   const fetchWebsites = async () => {
@@ -145,7 +164,8 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
     setNewStepData({
       title: '',
       description: '',
-      isActive: true
+      isActive: true,
+      leaveBehindStrategy: false
     })
     setStepModalIsOpen(true)
   }
@@ -161,6 +181,7 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
         title: newStepData.title,
         description: newStepData.description,
         isActive: newStepData.isActive,
+        leaveBehindStrategy: newStepData.leaveBehindStrategy || false,
         order: prev.steps.length,
         questions: []
       }]
@@ -174,7 +195,8 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
     setEditingStepData({
       title: step.title,
       description: step.description,
-      isActive: step.isActive
+      isActive: step.isActive,
+      leaveBehindStrategy: step.leaveBehindStrategy || false
     })
     setViewStepModalIsOpen(true)
   }
@@ -407,7 +429,21 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
         throw new Error(errorData.error || 'Failed to save questionnaire')
       }
 
-      router.push('/admin/questionnaires')
+      if (mode === 'create') {
+        // For create mode, set the questionnaire as created and stay on the page
+        setQuestionnaireCreated(true)
+        // Update the form data with the created questionnaire ID
+        const createdQuestionnaire = await response.json()
+        setFormData(prev => ({
+          ...prev,
+          id: createdQuestionnaire.id
+        }))
+        // Switch to edit mode
+        router.replace(`/admin/questionnaires/${createdQuestionnaire.id}/edit`)
+      } else {
+        // For edit mode, redirect to questionnaires list
+        router.push('/admin/questionnaires')
+      }
     } catch (error) {
       console.error('Error saving questionnaire:', error)
       setError(error.message)
@@ -437,16 +473,23 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
   }
 
   return (
-    <Box p={6}>
+   
       <VStack gap={6} align="stretch">
-        <Heading size="lg">
-          {mode === 'create' ? 'Create Questionnaire' : 'Edit Questionnaire'}
-        </Heading>
+       
 
         {error && (
           <Alert status="error">
             <Alert.Title>Error!</Alert.Title>
             <Alert.Description>{error}</Alert.Description>
+          </Alert>
+        )}
+
+        {mode === 'create' && questionnaireCreated && (
+          <Alert status="success">
+            <Alert.Title>Questionnaire Created!</Alert.Title>
+            <Alert.Description>
+              Your questionnaire has been created successfully. You can now add steps and questions to build your questionnaire.
+            </Alert.Description>
           </Alert>
         )}
 
@@ -457,15 +500,18 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
               formData={formData}
               setFormData={setFormData}
               websites={websites}
+              mode={mode}
             />
 
-            {/* Steps */}
-            <StepsTable 
-              formData={formData}
-              openStepModal={openStepModal}
-              openViewStepModal={openViewStepModal}
-              removeStep={removeStep}
-            />
+            {/* Steps - Only show if questionnaire is created or in edit mode */}
+            {questionnaireCreated && (
+              <StepsTable 
+                formData={formData}
+                openStepModal={openStepModal}
+                openViewStepModal={openViewStepModal}
+                removeStep={removeStep}
+              />
+            )}
 
             {/* Submit Button */}
             <HStack gap={4} justify="flex-end">
@@ -480,7 +526,7 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
                 loading={loading}
                 disabled={loading}
               >
-                {mode === 'create' ? 'Create Questionnaire' : 'Update Questionnaire'}
+                {mode === 'create' && !questionnaireCreated ? 'Create Questionnaire' : 'Update Questionnaire'}
               </Button>
             </HStack>
           </VStack>
@@ -536,6 +582,6 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
           getQuestionTypeColor={getQuestionTypeColor}
         />
       </VStack>
-    </Box>
+    
   )
 } 

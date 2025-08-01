@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { publicConfig } from '@/config/public'
 import PublicNavigation from '@/components/ui/PublicNavigation'
 import QuestionnaireButton from '@/components/ui/QuestionnaireButton'
+import GeoIPInfo from '@/components/ui/GeoIPInfo'
+import GeoIPComparison from '@/components/ui/GeoIPComparison'
 import { prisma } from '@/lib/prisma'
 
 
@@ -113,6 +115,19 @@ export default async function PublicWelcomePage() {
         <Card.Root w="full">
           <Card.Body>
             <VStack gap={4} align="center">
+              {website?.logo && (
+                <Box>
+                  <img 
+                    src={website.logo} 
+                    alt={`${website.name} logo`}
+                    style={{
+                      maxHeight: '80px',
+                      maxWidth: '200px',
+                      objectFit: 'contain'
+                    }}
+                  />
+                </Box>
+              )}
               <Heading size="2xl" textAlign="center">
                 Welcome to {website?.name || 'Our Website'}
               </Heading>
@@ -135,6 +150,24 @@ export default async function PublicWelcomePage() {
                   {website?.id || 'Not Found'}
                 </Badge>
               </HStack>
+
+              {website?.phone && (
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Phone:</Text>
+                  <Text fontSize="sm" color="fg.muted">
+                    {website.phone}
+                  </Text>
+                </HStack>
+              )}
+
+              {website?.logo && (
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Logo URL:</Text>
+                  <Text fontSize="sm" color="fg.muted" maxW="200px" overflow="hidden" textOverflow="ellipsis">
+                    {website.logo}
+                  </Text>
+                </HStack>
+              )}
 
               <HStack justify="space-between">
                 <Text fontWeight="medium">Database Status:</Text>
@@ -173,6 +206,20 @@ export default async function PublicWelcomePage() {
           </Card.Body>
         </Card.Root>
 
+        {/* GeoIP Information */}
+        <Card.Root w="full">
+          <Card.Body>
+            <GeoIPInfo />
+          </Card.Body>
+        </Card.Root>
+
+        {/* GeoIP Performance Comparison */}
+        <Card.Root w="full">
+          <Card.Body>
+            <GeoIPComparison />
+          </Card.Body>
+        </Card.Root>
+
         {/* Action Buttons */}
         <Card.Root w="full">
           <Card.Body>
@@ -205,7 +252,7 @@ export default async function PublicWelcomePage() {
           <Card.Body>
             <VStack gap={2} align="center">
               <Text fontSize="sm" color="fg.muted" textAlign="center">
-                This is a sample questionnaire system
+                This is a sample questionnaire system with GeoIP location detection
               </Text>
               <Text fontSize="xs" color="fg.muted" textAlign="center">
                 Website ID: {website?.id || 'N/A'} | 

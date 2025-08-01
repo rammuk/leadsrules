@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]/route'
-import { prisma } from '../../../lib/db'
+import { prisma } from '../../../lib/prisma'
 
 // GET /api/question-bank - Get all questions
 export async function GET() {

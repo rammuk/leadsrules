@@ -121,6 +121,18 @@ export default function StepEditModal({
                           <Switch.Label />
                         </Switch.Root>
                       </HStack>
+
+                      <HStack justify="space-between">
+                        <Text fontWeight="medium">Leave Behind Strategy</Text>
+                        <Switch.Root
+                          checked={editingStepData.leaveBehindStrategy || false}
+                          onCheckedChange={(e) => setEditingStepData(prev => ({ ...prev, leaveBehindStrategy: e.checked }))}
+                        >
+                          <Switch.HiddenInput />
+                          <Switch.Control />
+                          <Switch.Label />
+                        </Switch.Root>
+                      </HStack>
                     </VStack>
                   </Card.Body>
                 </Card.Root>

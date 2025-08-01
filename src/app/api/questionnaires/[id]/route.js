@@ -94,6 +94,7 @@ export async function PUT(request, { params }) {
             description: step.description,
             order: stepIndex,
             isActive: step.isActive !== undefined ? step.isActive : true,
+            leaveBehindStrategy: step.leaveBehindStrategy !== undefined ? step.leaveBehindStrategy : false,
             questions: step.questions ? {
               create: step.questions.map((question, questionIndex) => ({
                 question: question.question,

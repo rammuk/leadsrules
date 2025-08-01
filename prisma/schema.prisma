@@ -60,6 +60,8 @@ model Website {
   id             String          @id @default(cuid())
   name           String
   identifier     String          @unique
+  phone          String?
+  logo           String?
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -80,16 +82,17 @@ model Questionnaire {
 }
 
 model QuestionnaireStep {
-  id              String        @id @default(cuid())
-  questionnaireId String
-  title           String
-  description     String?
-  order           Int
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
-  questions       StepQuestion[]
+  id                  String        @id @default(cuid())
+  questionnaireId     String
+  title               String
+  description         String?
+  order               Int
+  isActive            Boolean       @default(true)
+  leaveBehindStrategy Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  questionnaire       Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  questions           StepQuestion[]
 }
 
 model StepQuestion {

@@ -16,7 +16,7 @@ import { ColorModeButton } from "../../../components/ui/color-mode"
 import SignOutButton from "../../../components/ui/sign-out-button"
 import { ClientOnly, Skeleton } from "@chakra-ui/react"
 import Link from "next/link"
-import { prisma } from "../../../lib/db"
+import { prisma } from "../../../lib/prisma"
 
 export default async function QuestionnairesPage() {
   const session = await getServerSession(authOptions)

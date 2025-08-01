@@ -18,7 +18,8 @@ import {
 export default function BasicInformation({ 
   formData, 
   setFormData, 
-  websites 
+  websites,
+  mode = 'create'
 }) {
   return (
     <Card.Root>
@@ -46,40 +47,56 @@ export default function BasicInformation({
             />
           </Box>
 
-          <Box>
-            <Text mb={2} fontWeight="medium">Website</Text>
-            {websites && (
-              <Select.Root
-                collection={websites}
-                value={formData.websiteId || ''}
-                onValueChange={(e) => {
-                  console.log('e', e)
-                  setFormData(prev => ({ ...prev, websiteId: e.value }))
-                }}
+          {mode === 'create' ? (
+            <Box>
+              <Text mb={2} fontWeight="medium">Website</Text>
+              {websites && (
+                <Select.Root
+                  collection={websites}
+                  value={formData.websiteId || ''}
+                  onValueChange={(e) => {
+                    console.log('e', e)
+                    setFormData(prev => ({ ...prev, websiteId: e.value }))
+                  }}
+                >
+                  <Select.Control>
+                    <Select.Trigger>
+                      <Select.ValueText placeholder="Select a website" />
+                      <Select.IndicatorGroup>
+                        <Select.Indicator />
+                      </Select.IndicatorGroup>
+                    </Select.Trigger>
+                  </Select.Control>
+                  <Select.Positioner>
+                    <Select.Content>
+                      {websites?.items?.map(website => {
+                        return(
+                          <Select.Item key={website.value} item={website}>
+                            {website.label}
+                            <Select.ItemIndicator />
+                          </Select.Item>
+                        )
+                      })}
+                    </Select.Content>
+                  </Select.Positioner>
+                </Select.Root>
+              )}
+            </Box>
+          ) : (
+            <Box>
+              <Text mb={2} fontWeight="medium">Connected Website</Text>
+              <Text 
+                p={3} 
+                bg="gray.50" 
+                borderRadius="md" 
+                border="1px solid" 
+                borderColor="gray.200"
+                color="gray.700"
               >
-                <Select.Control>
-                  <Select.Trigger>
-                    <Select.ValueText placeholder="Select a website" />
-                    <Select.IndicatorGroup>
-                      <Select.Indicator />
-                    </Select.IndicatorGroup>
-                  </Select.Trigger>
-                </Select.Control>
-                <Select.Positioner>
-                  <Select.Content>
-                    {websites?.items?.map(website => {
-                      return(
-                        <Select.Item key={website.value} item={website}>
-                          {website.label}
-                          <Select.ItemIndicator />
-                        </Select.Item>
-                      )
-                    })}
-                  </Select.Content>
-                </Select.Positioner>
-              </Select.Root>
-            )}
-          </Box>
+                {websites?.items?.find(w => w.value === formData.websiteId)?.label || 'Unknown Website'}
+              </Text>
+            </Box>
+          )}
           
           <HStack justify="space-between">
             <Text fontWeight="medium">Active</Text>

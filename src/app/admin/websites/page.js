@@ -16,7 +16,7 @@ import { ColorModeButton } from "../../../components/ui/color-mode"
 import SignOutButton from "../../../components/ui/sign-out-button"
 import { ClientOnly, Skeleton } from "@chakra-ui/react"
 import Link from "next/link"
-import { prisma } from "../../../lib/db"
+import { prisma } from "../../../lib/prisma"
 
 export default async function WebsitesPage() {
   const session = await getServerSession(authOptions)
@@ -82,6 +82,11 @@ export default async function WebsitesPage() {
                 </HStack>
                 <Card.Description>
                   Identifier: {website.identifier}
+                  {website.phone && (
+                    <Text fontSize="sm" color="fg.muted" mt="1">
+                      📞 {website.phone}
+                    </Text>
+                  )}
                 </Card.Description>
               </Card.Header>
               <Card.Body>
@@ -96,6 +101,14 @@ export default async function WebsitesPage() {
                       {new Date(website.createdAt).toLocaleDateString()}
                     </Text>
                   </HStack>
+                  {website.logo && (
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" color="fg.muted">Logo</Text>
+                      <Text fontSize="sm" color="fg.muted" maxW="150px" overflow="hidden" textOverflow="ellipsis">
+                        {website.logo}
+                      </Text>
+                    </HStack>
+                  )}
                   <Button 
                     as={Link} 
                     href={`/admin/websites/${website.id}/edit`}
