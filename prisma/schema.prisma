@@ -69,49 +69,49 @@ model Website {
 }
 
 model Questionnaire {
-  id          String     @id @default(cuid())
+  id          String              @id @default(cuid())
   title       String
   description String?
-  isActive    Boolean    @default(true)
+  isActive    Boolean             @default(true)
   websiteId   String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  website     Website             @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   steps       QuestionnaireStep[]
-  website     Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   responses   Response[]
 }
 
 model QuestionnaireStep {
-  id                  String        @id @default(cuid())
+  id                  String         @id @default(cuid())
   questionnaireId     String
   title               String
   description         String?
   order               Int
-  isActive            Boolean       @default(true)
-  leaveBehindStrategy Boolean       @default(false)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  questionnaire       Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  isActive            Boolean        @default(true)
+  leaveBehindStrategy Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  questionnaire       Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
   questions           StepQuestion[]
 }
 
 model StepQuestion {
-  id                  String            @id @default(cuid())
-  stepId              String
-  question            String            // Duplicated question text
-  questionType        String            @default("options") // "options", "date", "text", "textarea"
-  displayType         String            @default("list") // "list" or "cards"
-  isMultiSelect       Boolean           @default(false)
-  isRequired          Boolean           @default(false) // Can be different from question bank
-  validationRules     Json?             // Duplicated validation rules
-  order               Int
-  isActive            Boolean           @default(true)
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  step                QuestionnaireStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
-  options             StepQuestionOption[]
-  questionBankId      String?           // Reference to original question (optional)
-  questionBank        QuestionBank?     @relation(fields: [questionBankId], references: [id])
+  id              String               @id @default(cuid())
+  stepId          String
+  question        String
+  questionType    String               @default("options")
+  displayType     String               @default("list")
+  isMultiSelect   Boolean              @default(false)
+  isRequired      Boolean              @default(false)
+  validationRules Json?
+  order           Int
+  isActive        Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  questionBankId  String?
+  questionBank    QuestionBank?        @relation(fields: [questionBankId], references: [id])
+  step            QuestionnaireStep    @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  options         StepQuestionOption[]
 }
 
 model Response {
@@ -123,17 +123,17 @@ model Response {
 }
 
 model QuestionBank {
-  id            String           @id @default(cuid())
-  question      String
-  displayType   String           @default("list")
-  isMultiSelect Boolean          @default(false)
-  isActive      Boolean          @default(true)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  questionType  String           @default("options")
-  validationRules Json?          // Store validation rules as JSON
-  options       QuestionOption[]
-  stepQuestions StepQuestion[]
+  id              String           @id @default(cuid())
+  question        String
+  displayType     String           @default("list")
+  isMultiSelect   Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  questionType    String           @default("options")
+  validationRules Json?
+  options         QuestionOption[]
+  stepQuestions   StepQuestion[]
 }
 
 model QuestionOption {
@@ -148,12 +148,35 @@ model QuestionOption {
 }
 
 model StepQuestionOption {
-  id              String        @id @default(cuid())
-  stepQuestionId  String
-  description     String
-  image           String?
-  order           Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  stepQuestion    StepQuestion  @relation(fields: [stepQuestionId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  stepQuestionId String
+  description    String
+  image          String?
+  order          Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  stepQuestion   StepQuestion @relation(fields: [stepQuestionId], references: [id], onDelete: Cascade)
+}
+
+model GeoIPData {
+  id            String   @id @default(cuid())
+  ip            String   @unique
+  country       String?
+  countryCode   String?
+  region        String?
+  regionCode    String?
+  city          String?
+  postalCode    String?
+  latitude      Float?
+  longitude     Float?
+  timezone      String?
+  isp           String?
+  organization  String?
+  accuracy      Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ip])
+  @@index([country])
+  @@index([city])
 }

@@ -3,7 +3,8 @@ import "./globals.css"
 import Provider from "./provider"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "./api/auth/[...nextauth]/route"
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next';
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -19,6 +20,8 @@ export default async function RootLayout({
       <head />
       <body>
         <Provider session={session}>{children}</Provider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )

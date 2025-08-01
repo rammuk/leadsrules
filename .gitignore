@@ -42,6 +42,6 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# GeoIP database files (too large for GitHub)
-*.mmdb
-src/lib/GeoIP2-City.mmdb
+# GeoIP database files (now handled by Git LFS)
+# *.mmdb
+# src/lib/GeoIP2-City.mmdb

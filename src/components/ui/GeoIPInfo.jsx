@@ -22,7 +22,8 @@ export default function GeoIPInfo() {
       const startTime = performance.now()
       
       try {
-        const response = await fetch('/api/geoip/lookup')
+        // Use the new database lookup endpoint
+        const response = await fetch('/api/geoip/db-lookup')
         const data = await response.json()
         
         const endTime = performance.now()
@@ -30,7 +31,7 @@ export default function GeoIPInfo() {
         
         if (!response.ok) {
           console.error('GeoIP API error:', data)
-          throw new Error(data.error || 'Failed to fetch location data')
+          throw new Error(data.message || 'Failed to fetch location data')
         }
         
         setGeoData(data)
@@ -73,11 +74,13 @@ export default function GeoIPInfo() {
     )
   }
 
-  if (!geoData) {
+  if (!geoData || !geoData.success) {
     return (
       <VStack gap={3} align="stretch">
         <Text fontWeight="medium">Location Information:</Text>
-        <Text fontSize="sm" color="fg.muted">Unable to determine location</Text>
+        <Text fontSize="sm" color="fg.muted">
+          {geoData?.message || 'Unable to determine location'}
+        </Text>
       </VStack>
     )
   }
@@ -89,65 +92,88 @@ export default function GeoIPInfo() {
       <HStack justify="space-between">
         <Text fontSize="sm" fontWeight="medium">Your IP:</Text>
         <Text fontSize="sm" fontFamily="mono" color="fg.muted">
-          {geoData.ip}
+          {geoData.originalIP || geoData.ip}
         </Text>
       </HStack>
+
+      {geoData.originalIP !== geoData.ip && (
+        <HStack justify="space-between">
+          <Text fontSize="sm" fontWeight="medium">Test IP:</Text>
+          <Text fontSize="sm" fontFamily="mono" color="fg.muted">
+            {geoData.ip}
+          </Text>
+        </HStack>
+      )}
 
       <HStack justify="space-between">
         <Text fontSize="sm" fontWeight="medium">City:</Text>
         <Text fontSize="sm" color="fg.muted">
-          {geoData.location.city || 'Unknown'}
+          {geoData.location?.city || 'Unknown'}
         </Text>
       </HStack>
 
       <HStack justify="space-between">
         <Text fontSize="sm" fontWeight="medium">Region:</Text>
         <Text fontSize="sm" color="fg.muted">
-          {geoData.location.region || 'Unknown'}
+          {geoData.location?.region || 'Unknown'}
         </Text>
       </HStack>
 
       <HStack justify="space-between">
         <Text fontSize="sm" fontWeight="medium">Country:</Text>
         <Text fontSize="sm" color="fg.muted">
-          {geoData.location.country || 'Unknown'}
+          {geoData.location?.country || 'Unknown'}
         </Text>
       </HStack>
 
-      <HStack justify="space-between">
-        <Text fontSize="sm" fontWeight="medium">Timezone:</Text>
-        <Text fontSize="sm" color="fg.muted">
-          {geoData.location.timezone || 'Unknown'}
-        </Text>
-      </HStack>
-
-      <HStack justify="space-between">
-        <Text fontSize="sm" fontWeight="medium">Type:</Text>
-        <Badge 
-          colorPalette={geoData.location.isLocal ? "orange" : "green"}
-          variant="subtle"
-          fontSize="xs"
-        >
-          {geoData.location.isLocal ? "Local Network" : "Public IP"}
-        </Badge>
-      </HStack>
-
-      {fetchTime && (
+      {geoData.location?.coordinates && (
         <HStack justify="space-between">
-          <Text fontSize="sm" fontWeight="medium">Fetch Time:</Text>
-          <Text fontSize="sm" color="fg.muted">
-            {fetchTime.toFixed(2)}ms
+          <Text fontSize="sm" fontWeight="medium">Coordinates:</Text>
+          <Text fontSize="sm" color="fg.muted" fontFamily="mono">
+            {geoData.location.coordinates.lat.toFixed(4)}, {geoData.location.coordinates.lng.toFixed(4)}
           </Text>
         </HStack>
       )}
 
-      {geoData.location.latitude && geoData.location.longitude && (
-        <Box>
-          <Text fontSize="sm" fontWeight="medium" mb={1}>Coordinates:</Text>
-          <Text fontSize="xs" color="fg.muted" fontFamily="mono">
-            {geoData.location.latitude.toFixed(6)}, {geoData.location.longitude.toFixed(6)}
+      {geoData.location?.timezone && (
+        <HStack justify="space-between">
+          <Text fontSize="sm" fontWeight="medium">Timezone:</Text>
+          <Text fontSize="sm" color="fg.muted">
+            {geoData.location.timezone}
           </Text>
-        </Box>
+        </HStack>
+      )}
+
+      {geoData.location?.isp && (
+        <HStack justify="space-between">
+          <Text fontSize="sm" fontWeight="medium">ISP:</Text>
+          <Text fontSize="sm" color="fg.muted">
+            {geoData.location.isp}
+          </Text>
+        </HStack>
+      )}
+
+      <HStack justify="space-between">
+        <Text fontSize="sm" fontWeight="medium">Method:</Text>
+        <Badge colorPalette="blue" variant="subtle" fontSize="xs">
+          {geoData.method}
+        </Badge>
+      </HStack>
+
+      <HStack justify="space-between">
+        <Text fontSize="sm" fontWeight="medium">Fetch Time:</Text>
+        <Text fontSize="sm" color="fg.muted" fontFamily="mono">
+          {geoData.fetchTime}ms
+        </Text>
+      </HStack>
+
+      {fetchTime && (
+        <HStack justify="space-between">
+          <Text fontSize="sm" fontWeight="medium">Total Time:</Text>
+          <Text fontSize="sm" color="fg.muted" fontFamily="mono">
+            {Math.round(fetchTime)}ms
+          </Text>
+        </HStack>
       )}
     </VStack>
   )

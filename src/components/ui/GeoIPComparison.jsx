@@ -1,229 +1,340 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
-import {
-  Box,
-  Card,
-  Heading,
-  Text,
-  VStack,
-  HStack,
+import { 
+  Box, 
+  VStack, 
+  HStack, 
+  Text, 
+  Button, 
+  Input, 
+  Alert, 
+  Card, 
   Badge,
   Spinner,
-  Alert,
-  Button,
-  Grid,
-  GridItem
+  Progress
 } from '@chakra-ui/react'
 
 export default function GeoIPComparison() {
-  const [data, setData] = useState(null)
+  const [comparisonData, setComparisonData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [testIP, setTestIP] = useState('')
 
-  const fetchComparison = async () => {
+  const runComparison = async (ip = null) => {
     setLoading(true)
     setError(null)
     
     try {
-      const startTime = performance.now()
-      const response = await fetch('/api/geoip/compare')
-      const endTime = performance.now()
-      const fetchTime = endTime - startTime
+      // Use the new compare-all endpoint
+      const url = '/api/geoip/compare-all'
+      const method = ip ? 'POST' : 'GET'
+      const body = ip ? JSON.stringify({ ip }) : undefined
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setComparisonData(data)
+      } else {
+        setError(data.message || 'Failed to compare methods')
       }
-      
-      const result = await response.json()
-      setData({ ...result, fetchTime })
     } catch (err) {
-      console.error('Error fetching comparison:', err)
-      setError(err.message)
+      setError('Network error: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
+  const handleCustomIP = () => {
+    if (testIP.trim()) {
+      runComparison(testIP.trim())
+    }
+  }
+
   useEffect(() => {
-    fetchComparison()
+    // Run initial comparison on component mount
+    runComparison()
   }, [])
 
-  if (loading) {
-    return (
-      <Card.Root>
-        <Card.Body>
-          <VStack gap={4}>
+  return (
+    <VStack gap={6} align="stretch" w="full">
+      <Box>
+        <Text fontSize="xl" fontWeight="bold" mb={2}>
+          GeoIP Method Comparison
+        </Text>
+        <Text color="fg.muted" fontSize="sm">
+          Compare performance between Database Lookup, Local MaxMind database, and MaxMind Cloud API
+        </Text>
+      </Box>
+
+      {/* Test Custom IP */}
+      <Card.Root p={4}>
+        <VStack gap={3} align="stretch">
+          <Text fontWeight="semibold">Test Custom IP Address</Text>
+          <HStack gap={3}>
+            <Input
+              placeholder="Enter IP address (e.g., 8.8.8.8)"
+              value={testIP}
+              onChange={(e) => setTestIP(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleCustomIP()}
+            />
+            <Button 
+              onClick={handleCustomIP}
+              disabled={!testIP.trim() || loading}
+              colorPalette="blue"
+            >
+              Test IP
+            </Button>
+          </HStack>
+        </VStack>
+      </Card.Root>
+
+      {/* Refresh Button */}
+      <Button 
+        onClick={() => runComparison()}
+        disabled={loading}
+        colorPalette="green"
+      >
+        {loading ? <Spinner size="sm" /> : 'Refresh Comparison'}
+      </Button>
+
+      {/* Error Display */}
+      {error && (
+        <Alert.Root status="error">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Error</Alert.Title>
+            <Alert.Description>{error}</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+
+      {/* Results Display */}
+      {comparisonData && (
+        <VStack gap={4} align="stretch">
+          {/* Summary */}
+          <Card.Root p={4}>
+            <VStack gap={3} align="stretch">
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">Test IP</Text>
+                <Badge colorPalette="blue">{comparisonData.ip}</Badge>
+              </HStack>
+
+              {comparisonData.originalIP !== comparisonData.ip && (
+                <HStack justify="space-between">
+                  <Text fontWeight="semibold">Original IP</Text>
+                  <Badge colorPalette="gray">{comparisonData.originalIP}</Badge>
+                </HStack>
+              )}
+
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">Fastest Method</Text>
+                <Badge 
+                  colorPalette={comparisonData.comparison.fastestMethod.includes('Database') ? 'green' : 
+                               comparisonData.comparison.fastestMethod.includes('Local') ? 'blue' : 'purple'}
+                >
+                  {comparisonData.comparison.fastestMethod}
+                </Badge>
+              </HStack>
+
+              {comparisonData.comparison.timeDifference > 0 && (
+                <HStack justify="space-between">
+                  <Text fontWeight="semibold">Time Difference</Text>
+                  <Badge colorPalette="orange">
+                    +{comparisonData.comparison.timeDifference}ms
+                  </Badge>
+                </HStack>
+              )}
+
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">Total Test Time</Text>
+                <Badge colorPalette="gray">
+                  {comparisonData.totalTime}ms
+                </Badge>
+              </HStack>
+            </VStack>
+          </Card.Root>
+
+          {/* Database Lookup Results */}
+          <Card.Root p={4}>
+            <VStack gap={3} align="stretch">
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">Database Lookup</Text>
+                <Badge
+                  colorPalette={
+                    comparisonData.databaseLookup.status === 'success' ? 'green' :
+                    comparisonData.databaseLookup.status === 'error' ? 'red' : 'gray'
+                  }
+                >
+                  {comparisonData.databaseLookup.status}
+                </Badge>
+              </HStack>
+
+              <HStack justify="space-between">
+                <Text>Fetch Time</Text>
+                <Text fontWeight="medium" color="green.600">
+                  {comparisonData.databaseLookup.fetchTime}ms
+                </Text>
+              </HStack>
+
+              {comparisonData.databaseLookup.data && (
+                <Box>
+                  <Text fontSize="sm" color="fg.muted" mb={2} fontWeight="medium">Location Data:</Text>
+                  <Box 
+                    bg="green.50" 
+                    p={3} 
+                    borderRadius="md" 
+                    border="1px solid" 
+                    borderColor="green.200"
+                    maxH="200px"
+                    overflow="auto"
+                  >
+                    <Text fontSize="sm" fontFamily="mono" color="green.800" lineHeight="1.4">
+                      {JSON.stringify(comparisonData.databaseLookup.data, null, 2)}
+                    </Text>
+                  </Box>
+                </Box>
+              )}
+
+              {comparisonData.databaseLookup.error && (
+                <Alert.Root status="error" size="sm">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>{comparisonData.databaseLookup.error}</Alert.Description>
+                  </Alert.Content>
+                </Alert.Root>
+              )}
+            </VStack>
+          </Card.Root>
+
+          {/* Local Database Results */}
+          <Card.Root p={4}>
+            <VStack gap={3} align="stretch">
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">Local Database (.mmdb)</Text>
+                <Badge
+                  colorPalette={
+                    comparisonData.localDatabase.status === 'success' ? 'blue' :
+                    comparisonData.localDatabase.status === 'error' ? 'red' : 'gray'
+                  }
+                >
+                  {comparisonData.localDatabase.status}
+                </Badge>
+              </HStack>
+
+              <HStack justify="space-between">
+                <Text>Fetch Time</Text>
+                <Text fontWeight="medium" color="blue.600">
+                  {comparisonData.localDatabase.fetchTime}ms
+                </Text>
+              </HStack>
+
+              {comparisonData.localDatabase.data && (
+                <Box>
+                  <Text fontSize="sm" color="fg.muted" mb={2} fontWeight="medium">Location Data:</Text>
+                  <Box 
+                    bg="blue.50" 
+                    p={3} 
+                    borderRadius="md" 
+                    border="1px solid" 
+                    borderColor="blue.200"
+                    maxH="200px"
+                    overflow="auto"
+                  >
+                    <Text fontSize="sm" fontFamily="mono" color="blue.800" lineHeight="1.4">
+                      {JSON.stringify(comparisonData.localDatabase.data, null, 2)}
+                    </Text>
+                  </Box>
+                </Box>
+              )}
+
+              {comparisonData.localDatabase.error && (
+                <Alert.Root status="error" size="sm">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>{comparisonData.localDatabase.error}</Alert.Description>
+                  </Alert.Content>
+                </Alert.Root>
+              )}
+            </VStack>
+          </Card.Root>
+
+          {/* MaxMind API Results */}
+          <Card.Root p={4}>
+            <VStack gap={3} align="stretch">
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">MaxMind Cloud API</Text>
+                <Badge
+                  colorPalette={
+                    comparisonData.maxmindApi.status === 'success' ? 'purple' :
+                    comparisonData.maxmindApi.status === 'error' ? 'red' : 'gray'
+                  }
+                >
+                  {comparisonData.maxmindApi.status}
+                </Badge>
+              </HStack>
+
+              <HStack justify="space-between">
+                <Text>Fetch Time</Text>
+                <Text fontWeight="medium" color="purple.600">
+                  {comparisonData.maxmindApi.fetchTime}ms
+                </Text>
+              </HStack>
+
+              {comparisonData.maxmindApi.data && (
+                <Box>
+                  <Text fontSize="sm" color="fg.muted" mb={2} fontWeight="medium">Location Data:</Text>
+                  <Box 
+                    bg="purple.50" 
+                    p={3} 
+                    borderRadius="md" 
+                    border="1px solid" 
+                    borderColor="purple.200"
+                    maxH="200px"
+                    overflow="auto"
+                  >
+                    <Text fontSize="sm" fontFamily="mono" color="purple.800" lineHeight="1.4">
+                      {JSON.stringify(comparisonData.maxmindApi.data, null, 2)}
+                    </Text>
+                  </Box>
+                </Box>
+              )}
+
+              {comparisonData.maxmindApi.error && (
+                <Alert.Root status="error" size="sm">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>{comparisonData.maxmindApi.error}</Alert.Description>
+                  </Alert.Content>
+                </Alert.Root>
+              )}
+            </VStack>
+          </Card.Root>
+        </VStack>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <Card.Root p={6}>
+          <VStack gap={3}>
             <Spinner size="lg" />
             <Text>Comparing GeoIP methods...</Text>
+            <Progress.Root value={0} size="sm" w="full">
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
           </VStack>
-        </Card.Body>
-      </Card.Root>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card.Root>
-        <Card.Body>
-          <Alert.Root status="error">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>Error!</Alert.Title>
-              <Alert.Description>{error}</Alert.Description>
-            </Alert.Content>
-          </Alert.Root>
-          <Button mt={4} onClick={fetchComparison}>
-            Retry Comparison
-          </Button>
-        </Card.Body>
-      </Card.Root>
-    )
-  }
-
-  if (!data) return null
-
-  const { ip, localDatabase, maxmindApi, comparison, fetchTime } = data
-
-  return (
-    <Card.Root>
-      <Card.Header>
-        <Heading size="md">GeoIP Performance Comparison</Heading>
-        <Text color="fg.muted" fontSize="sm">
-          Comparing local database vs MaxMind API for IP: {ip}
-        </Text>
-      </Card.Header>
-      <Card.Body>
-        <VStack gap={6} align="stretch">
-          {/* Overall Results */}
-          <Box>
-            <HStack justify="space-between" mb={2}>
-              <Text fontWeight="semibold">Performance Summary</Text>
-              <Badge 
-                colorPalette={comparison.fasterMethod === 'Local Database' ? 'green' : 'blue'}
-                variant="subtle"
-              >
-                {comparison.fasterMethod} is faster
-              </Badge>
-            </HStack>
-            <Text fontSize="sm" color="fg.muted">
-              Time difference: {comparison.timeDifference}ms • Recommendation: {comparison.recommendation}
-            </Text>
-            <Text fontSize="sm" color="fg.muted">
-              Accuracy: {comparison.accuracy}
-            </Text>
-          </Box>
-
-          {/* Method Comparison Grid */}
-          <Grid templateColumns="1fr 1fr" gap={4}>
-            {/* Local Database */}
-            <GridItem>
-              <Card.Root variant="outline">
-                <Card.Header>
-                  <HStack justify="space-between">
-                    <Text fontWeight="semibold">Local Database</Text>
-                    <Badge 
-                      colorPalette={localDatabase.status === 'success' ? 'green' : 'red'}
-                      variant="subtle"
-                    >
-                      {localDatabase.status}
-                    </Badge>
-                  </HStack>
-                </Card.Header>
-                <Card.Body>
-                  <VStack gap={2} align="stretch">
-                    <Text fontSize="sm">
-                      <strong>Lookup Time:</strong> {localDatabase.lookupTime.toFixed(2)}ms
-                    </Text>
-                    {localDatabase.location ? (
-                      <>
-                        <Text fontSize="sm">
-                          <strong>City:</strong> {localDatabase.location.city || 'Unknown'}
-                        </Text>
-                        <Text fontSize="sm">
-                          <strong>Country:</strong> {localDatabase.location.country || 'Unknown'}
-                        </Text>
-                        <Text fontSize="sm">
-                          <strong>Region:</strong> {localDatabase.location.region || 'Unknown'}
-                        </Text>
-                        {localDatabase.location.latitude && (
-                          <Text fontSize="sm">
-                            <strong>Coordinates:</strong> {localDatabase.location.latitude.toFixed(4)}, {localDatabase.location.longitude.toFixed(4)}
-                          </Text>
-                        )}
-                      </>
-                    ) : (
-                      <Text fontSize="sm" color="fg.muted">
-                        No location data available
-                      </Text>
-                    )}
-                  </VStack>
-                </Card.Body>
-              </Card.Root>
-            </GridItem>
-
-            {/* MaxMind API */}
-            <GridItem>
-              <Card.Root variant="outline">
-                <Card.Header>
-                  <HStack justify="space-between">
-                    <Text fontWeight="semibold">MaxMind API</Text>
-                    <Badge 
-                      colorPalette={maxmindApi.status === 'success' ? 'green' : 'red'}
-                      variant="subtle"
-                    >
-                      {maxmindApi.status}
-                    </Badge>
-                  </HStack>
-                </Card.Header>
-                <Card.Body>
-                  <VStack gap={2} align="stretch">
-                    <Text fontSize="sm">
-                      <strong>Lookup Time:</strong> {maxmindApi.lookupTime.toFixed(2)}ms
-                    </Text>
-                    {maxmindApi.location ? (
-                      <>
-                        <Text fontSize="sm">
-                          <strong>City:</strong> {maxmindApi.location.city || 'Unknown'}
-                        </Text>
-                        <Text fontSize="sm">
-                          <strong>Country:</strong> {maxmindApi.location.country || 'Unknown'}
-                        </Text>
-                        <Text fontSize="sm">
-                          <strong>Region:</strong> {maxmindApi.location.region || 'Unknown'}
-                        </Text>
-                        {maxmindApi.location.latitude && (
-                          <Text fontSize="sm">
-                            <strong>Coordinates:</strong> {maxmindApi.location.latitude.toFixed(4)}, {maxmindApi.location.longitude.toFixed(4)}
-                          </Text>
-                        )}
-                      </>
-                    ) : (
-                      <Text fontSize="sm" color="fg.muted">
-                        No location data available
-                      </Text>
-                    )}
-                  </VStack>
-                </Card.Body>
-              </Card.Root>
-            </GridItem>
-          </Grid>
-
-          {/* Additional Info */}
-          <Box>
-            <Text fontSize="sm" color="fg.muted">
-              <strong>Total API fetch time:</strong> {fetchTime.toFixed(2)}ms
-            </Text>
-            <Text fontSize="sm" color="fg.muted">
-              <strong>Note:</strong> MaxMind API results are simulated for comparison purposes
-            </Text>
-          </Box>
-
-          <Button onClick={fetchComparison} variant="outline">
-            Refresh Comparison
-          </Button>
-        </VStack>
-      </Card.Body>
-    </Card.Root>
+        </Card.Root>
+      )}
+    </VStack>
   )
 } 
