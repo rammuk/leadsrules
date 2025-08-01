@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import QuestionnaireForm from '@/components/ui/questionnaire-form'
-
-const prisma = new PrismaClient()
 
 export default async function EditQuestionnairePage({ params }) {
   const { id } = await params

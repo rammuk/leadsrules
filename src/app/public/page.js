@@ -1,13 +1,12 @@
-import { PrismaClient } from '@prisma/client'
 import { Card, Heading, Text, VStack, HStack, Button, Badge, Box, Skeleton } from '@chakra-ui/react'
 import Link from 'next/link'
 import { publicConfig } from '@/config/public'
 import PublicNavigation from '@/components/ui/PublicNavigation'
+import QuestionnaireButton from '@/components/ui/QuestionnaireButton'
+import { prisma } from '@/lib/prisma'
 
 
 console.log('publicConfig', publicConfig)
-
-const prisma = new PrismaClient()
 
 async function getWebsiteInfo() {
   try {
@@ -185,11 +184,7 @@ export default async function PublicWelcomePage() {
                   <Text color="fg.muted" textAlign="center">
                     We have an active questionnaire with {website.questionnaires[0].steps.length} steps.
                   </Text>
-                  <Link href="/public/questionnaire" passHref>
-                    <Button size="lg" colorPalette="blue" w="full">
-                      Start Questionnaire
-                    </Button>
-                  </Link>
+                  <QuestionnaireButton questionnaire={website.questionnaires[0]} />
                 </VStack>
               ) : (
                 <VStack gap={3}>
