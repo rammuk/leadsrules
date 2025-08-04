@@ -9,7 +9,7 @@ const localPrisma = new PrismaClient({
   }
 })
 
-// Production database (target)
+// Production database (target) - use the same URL that the API uses
 const productionPrisma = new PrismaClient({
   datasources: {
     db: {

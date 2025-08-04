@@ -17,3 +17,4 @@ coverage
 .cache
 dist
 build 
+files_maxmind

@@ -1,7 +1,7 @@
 # Exclude large files from Vercel deployment
 *.mmdb
 src/lib/GeoIP2-City.mmdb
-
+files_maxmind
 # Development files
 .env*
 .env.local
@@ -49,3 +49,4 @@ node_modules/
 
 # vercel
 .vercel 
+

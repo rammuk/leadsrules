@@ -47,23 +47,13 @@ export async function getLocationFromIP(ip) {
       console.log('Reader methods:', Object.getOwnPropertyNames(reader))
       console.log('Reader prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(reader)))
       
-      // Try different methods
+      // Use the get() method directly since city() doesn't exist
       let result = null
       try {
-        result = reader.city(ip)
+        result = reader.get(ip)
       } catch (error) {
-        console.log('city() method failed, trying get()')
-        try {
-          result = reader.get(ip)
-        } catch (error2) {
-          console.log('get() method failed, trying lookup()')
-          try {
-            result = reader.lookup(ip)
-          } catch (error3) {
-            console.log('All methods failed:', error3)
-            return null
-          }
-        }
+        console.log('get() method failed:', error.message)
+        return null
       }
       
       if (!result) {

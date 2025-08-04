@@ -1,5 +1,6 @@
 import { getLocationFromIP } from '@/lib/geoip'
 import { getLocationFromAPI } from '@/lib/geoip-api'
+
 import { getClientIP, getTestIP } from '@/lib/geoip-utils'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
@@ -29,6 +30,9 @@ export async function GET(request) {
       const localStart = performance.now()
       const localLocation = await getLocationFromIP(testIP)
       const localTime = performance.now() - localStart
+
+
+
 
       results.localDatabase = {
         status: localLocation ? 'success' : 'no_data',
@@ -66,28 +70,7 @@ export async function GET(request) {
       }
     }
 
-    // Test database lookup method
-    try {
-      const dbStart = performance.now()
-      const dbLocation = await prisma.geoIPData.findUnique({
-        where: { ip: testIP }
-      })
-      const dbTime = performance.now() - dbStart
-
-      results.databaseLookup = {
-        status: dbLocation ? 'success' : 'no_data',
-        fetchTime: Math.round(dbTime),
-        data: dbLocation,
-        error: null
-      }
-    } catch (error) {
-      results.databaseLookup = {
-        status: 'error',
-        fetchTime: 0,
-        data: null,
-        error: error.message
-      }
-    }
+       // Database lookup method removed - table deleted
 
     // Compare results and find fastest
     const successfulMethods = []
@@ -98,9 +81,8 @@ export async function GET(request) {
     if (results.maxmindApi.status === 'success') {
       successfulMethods.push({ name: 'MaxMind API', time: results.maxmindApi.fetchTime })
     }
-    if (results.databaseLookup.status === 'success') {
-      successfulMethods.push({ name: 'Database Lookup', time: results.databaseLookup.fetchTime })
-    }
+   
+
 
     if (successfulMethods.length > 0) {
       const fastest = successfulMethods.reduce((prev, current) => 
@@ -188,6 +170,9 @@ export async function POST(request) {
       const apiStart = performance.now()
       const apiLocation = await getLocationFromAPI(ip)
       const apiTime = performance.now() - apiStart
+      
+      console.log('apiLocation',apiLocation);
+      
 
       results.maxmindApi = {
         status: apiLocation ? 'success' : 'no_data',
@@ -204,28 +189,8 @@ export async function POST(request) {
       }
     }
 
-    // Test database lookup method
-    try {
-      const dbStart = performance.now()
-      const dbLocation = await prisma.geoIPData.findUnique({
-        where: { ip: ip }
-      })
-      const dbTime = performance.now() - dbStart
-
-      results.databaseLookup = {
-        status: dbLocation ? 'success' : 'no_data',
-        fetchTime: Math.round(dbTime),
-        data: dbLocation,
-        error: null
-      }
-    } catch (error) {
-      results.databaseLookup = {
-        status: 'error',
-        fetchTime: 0,
-        data: null,
-        error: error.message
-      }
-    }
+   
+    // Database lookup method removed - table deleted
 
     // Compare results and find fastest
     const successfulMethods = []
@@ -236,9 +201,8 @@ export async function POST(request) {
     if (results.maxmindApi.status === 'success') {
       successfulMethods.push({ name: 'MaxMind API', time: results.maxmindApi.fetchTime })
     }
-    if (results.databaseLookup.status === 'success') {
-      successfulMethods.push({ name: 'Database Lookup', time: results.databaseLookup.fetchTime })
-    }
+ 
+
 
     if (successfulMethods.length > 0) {
       const fastest = successfulMethods.reduce((prev, current) => 

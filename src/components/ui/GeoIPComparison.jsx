@@ -71,7 +71,7 @@ export default function GeoIPComparison() {
           GeoIP Method Comparison
         </Text>
         <Text color="fg.muted" fontSize="sm">
-          Compare performance between Database Lookup, Local MaxMind database, and MaxMind Cloud API
+          Compare performance between Local MaxMind database and MaxMind Cloud API
         </Text>
       </Box>
 
@@ -138,8 +138,9 @@ export default function GeoIPComparison() {
               <HStack justify="space-between">
                 <Text fontWeight="semibold">Fastest Method</Text>
                 <Badge 
-                  colorPalette={comparisonData.comparison.fastestMethod.includes('Database') ? 'green' : 
-                               comparisonData.comparison.fastestMethod.includes('Local') ? 'blue' : 'purple'}
+                  colorPalette={
+                    comparisonData.comparison.fastestMethod.includes('Local') ? 'blue' : 'purple'
+                  }
                 >
                   {comparisonData.comparison.fastestMethod}
                 </Badge>
@@ -163,57 +164,7 @@ export default function GeoIPComparison() {
             </VStack>
           </Card.Root>
 
-          {/* Database Lookup Results */}
-          <Card.Root p={4}>
-            <VStack gap={3} align="stretch">
-              <HStack justify="space-between">
-                <Text fontWeight="semibold">Database Lookup</Text>
-                <Badge
-                  colorPalette={
-                    comparisonData.databaseLookup.status === 'success' ? 'green' :
-                    comparisonData.databaseLookup.status === 'error' ? 'red' : 'gray'
-                  }
-                >
-                  {comparisonData.databaseLookup.status}
-                </Badge>
-              </HStack>
 
-              <HStack justify="space-between">
-                <Text>Fetch Time</Text>
-                <Text fontWeight="medium" color="green.600">
-                  {comparisonData.databaseLookup.fetchTime}ms
-                </Text>
-              </HStack>
-
-              {comparisonData.databaseLookup.data && (
-                <Box>
-                  <Text fontSize="sm" color="fg.muted" mb={2} fontWeight="medium">Location Data:</Text>
-                  <Box 
-                    bg="green.50" 
-                    p={3} 
-                    borderRadius="md" 
-                    border="1px solid" 
-                    borderColor="green.200"
-                    maxH="200px"
-                    overflow="auto"
-                  >
-                    <Text fontSize="sm" fontFamily="mono" color="green.800" lineHeight="1.4">
-                      {JSON.stringify(comparisonData.databaseLookup.data, null, 2)}
-                    </Text>
-                  </Box>
-                </Box>
-              )}
-
-              {comparisonData.databaseLookup.error && (
-                <Alert.Root status="error" size="sm">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Description>{comparisonData.databaseLookup.error}</Alert.Description>
-                  </Alert.Content>
-                </Alert.Root>
-              )}
-            </VStack>
-          </Card.Root>
 
           {/* Local Database Results */}
           <Card.Root p={4}>
@@ -318,6 +269,8 @@ export default function GeoIPComparison() {
               )}
             </VStack>
           </Card.Root>
+
+          
         </VStack>
       )}
 

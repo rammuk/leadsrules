@@ -45,3 +45,4 @@ next-env.d.ts
 # GeoIP database files (now handled by Git LFS)
 # *.mmdb
 # src/lib/GeoIP2-City.mmdb
+/files_maxmind

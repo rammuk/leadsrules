@@ -35,7 +35,9 @@ async function getLocationFromAPI(ip) {
     })
 
     if (!response.ok) {
+      
       console.error('MaxMind API error:', response.status, response.statusText)
+     
       return null
     }
 

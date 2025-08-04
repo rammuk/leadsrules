@@ -158,25 +158,4 @@ model StepQuestionOption {
   stepQuestion   StepQuestion @relation(fields: [stepQuestionId], references: [id], onDelete: Cascade)
 }
 
-model GeoIPData {
-  id            String   @id @default(cuid())
-  ip            String   @unique
-  country       String?
-  countryCode   String?
-  region        String?
-  regionCode    String?
-  city          String?
-  postalCode    String?
-  latitude      Float?
-  longitude     Float?
-  timezone      String?
-  isp           String?
-  organization  String?
-  accuracy      Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
-  @@index([ip])
-  @@index([country])
-  @@index([city])
-}

@@ -23,7 +23,7 @@ export default function GeoIPInfo() {
       
       try {
         // Use the new database lookup endpoint
-        const response = await fetch('/api/geoip/db-lookup')
+        const response = await fetch('/api/geoip/lookup')
         const data = await response.json()
         
         const endTime = performance.now()
@@ -33,7 +33,6 @@ export default function GeoIPInfo() {
           console.error('GeoIP API error:', data)
           throw new Error(data.message || 'Failed to fetch location data')
         }
-        
         setGeoData(data)
         setFetchTime(timeTaken)
       } catch (error) {
@@ -46,6 +45,9 @@ export default function GeoIPInfo() {
 
     fetchGeoIP()
   }, [])
+
+
+  console.log('geoData', geoData);
 
   if (loading) {
     return (
@@ -74,7 +76,7 @@ export default function GeoIPInfo() {
     )
   }
 
-  if (!geoData || !geoData.success) {
+  if (!geoData) {
     return (
       <VStack gap={3} align="stretch">
         <Text fontWeight="medium">Location Information:</Text>
