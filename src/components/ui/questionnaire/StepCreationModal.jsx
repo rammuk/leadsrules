@@ -89,6 +89,30 @@ export default function StepCreationModal({
                 <Switch.Label />
               </Switch.Root>
             </HStack>
+
+            <HStack justify="space-between">
+              <Text fontWeight="medium">Show Step Title</Text>
+              <Switch.Root
+                checked={newStepData.showStepTitle !== false}
+                onCheckedChange={(e) => setNewStepData(prev => ({ ...prev, showStepTitle: e.checked }))}
+              >
+                <Switch.HiddenInput />
+                <Switch.Control />
+                <Switch.Label />
+              </Switch.Root>
+            </HStack>
+
+            <HStack justify="space-between">
+              <Text fontWeight="medium">Show Question Titles</Text>
+              <Switch.Root
+                checked={newStepData.showQuestionTitles !== false}
+                onCheckedChange={(e) => setNewStepData(prev => ({ ...prev, showQuestionTitles: e.checked }))}
+              >
+                <Switch.HiddenInput />
+                <Switch.Control />
+                <Switch.Label />
+              </Switch.Root>
+            </HStack>
           </VStack>
         </Card.Body>
         <Card.Footer>

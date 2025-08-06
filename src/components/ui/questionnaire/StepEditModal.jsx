@@ -133,6 +133,30 @@ export default function StepEditModal({
                           <Switch.Label />
                         </Switch.Root>
                       </HStack>
+
+                      <HStack justify="space-between">
+                        <Text fontWeight="medium">Show Step Title</Text>
+                        <Switch.Root
+                          checked={editingStepData.showStepTitle !== false}
+                          onCheckedChange={(e) => setEditingStepData(prev => ({ ...prev, showStepTitle: e.checked }))}
+                        >
+                          <Switch.HiddenInput />
+                          <Switch.Control />
+                          <Switch.Label />
+                        </Switch.Root>
+                      </HStack>
+
+                      <HStack justify="space-between">
+                        <Text fontWeight="medium">Show Question Titles</Text>
+                        <Switch.Root
+                          checked={editingStepData.showQuestionTitles !== false}
+                          onCheckedChange={(e) => setEditingStepData(prev => ({ ...prev, showQuestionTitles: e.checked }))}
+                        >
+                          <Switch.HiddenInput />
+                          <Switch.Control />
+                          <Switch.Label />
+                        </Switch.Root>
+                      </HStack>
                     </VStack>
                   </Card.Body>
                 </Card.Root>

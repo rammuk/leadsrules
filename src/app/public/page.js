@@ -30,7 +30,15 @@ async function getWebsiteInfo() {
               orderBy: {
                 order: 'asc'
               },
-              include: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                order: true,
+                isActive: true,
+                leaveBehindStrategy: true,
+                showStepTitle: true,
+                showQuestionTitles: true,
                 questions: {
                   where: {
                     isActive: true
@@ -65,31 +73,39 @@ async function getWebsiteInfo() {
               isActive: true
             },
             include: {
-              steps: {
-                where: {
-                  isActive: true
-                },
-                orderBy: {
-                  order: 'asc'
-                },
-                include: {
-                  questions: {
-                    where: {
-                      isActive: true
-                    },
-                    orderBy: {
-                      order: 'asc'
-                    },
-                    include: {
-                      options: {
-                        orderBy: {
-                          order: 'asc'
-                        }
+                          steps: {
+              where: {
+                isActive: true
+              },
+              orderBy: {
+                order: 'asc'
+              },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                order: true,
+                isActive: true,
+                leaveBehindStrategy: true,
+                showStepTitle: true,
+                showQuestionTitles: true,
+                questions: {
+                  where: {
+                    isActive: true
+                  },
+                  orderBy: {
+                    order: 'asc'
+                  },
+                  include: {
+                    options: {
+                      orderBy: {
+                        order: 'asc'
                       }
                     }
                   }
                 }
               }
+            }
             }
           }
         }

@@ -53,10 +53,9 @@ export default function BasicInformation({
               {websites && (
                 <Select.Root
                   collection={websites}
-                  value={formData.websiteId || ''}
                   onValueChange={(e) => {
                     console.log('e', e)
-                    setFormData(prev => ({ ...prev, websiteId: e.value }))
+                    setFormData(prev => ({ ...prev, websiteId: e.items[0].value }))
                   }}
                 >
                   <Select.Control>

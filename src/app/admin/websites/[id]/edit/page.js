@@ -9,11 +9,13 @@ import {
   Heading,
   Text,
   Badge,
+  Button,
 } from "@chakra-ui/react"
 import { ColorModeButton } from "../../../../../components/ui/color-mode"
 import SignOutButton from "../../../../../components/ui/sign-out-button"
 import { ClientOnly, Skeleton } from "@chakra-ui/react"
 import WebsiteForm from "../../../../../components/ui/website-form"
+import Link from "next/link"
 
 export default async function EditWebsitePage({ params }) {
   const session = await getServerSession(authOptions)
@@ -59,6 +61,9 @@ export default async function EditWebsitePage({ params }) {
             </Text>
           </Box>
           <HStack gap="4">
+            <Button as={Link} href="/admin/websites" variant="outline">
+              Back to Websites
+            </Button>
             <Badge colorPalette="green" variant="subtle">
               Admin
             </Badge>

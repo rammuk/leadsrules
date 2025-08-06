@@ -71,7 +71,7 @@ export default function GeoIPComparison() {
           GeoIP Method Comparison
         </Text>
         <Text color="fg.muted" fontSize="sm">
-          Compare performance between Local MaxMind database and MaxMind Cloud API
+          Compare performance between Local MaxMind database, PostgreSQL database, and MaxMind Cloud API
         </Text>
       </Box>
 
@@ -137,8 +137,9 @@ export default function GeoIPComparison() {
 
               <HStack justify="space-between">
                 <Text fontWeight="semibold">Fastest Method</Text>
-                <Badge 
+                                <Badge
                   colorPalette={
+                    comparisonData.comparison.fastestMethod.includes('PostgreSQL') ? 'green' :
                     comparisonData.comparison.fastestMethod.includes('Local') ? 'blue' : 'purple'
                   }
                 >
@@ -270,7 +271,57 @@ export default function GeoIPComparison() {
             </VStack>
           </Card.Root>
 
-          
+          {/* PostgreSQL Database Results */}
+          <Card.Root p={4}>
+            <VStack gap={3} align="stretch">
+              <HStack justify="space-between">
+                <Text fontWeight="semibold">PostgreSQL Database</Text>
+                <Badge
+                  colorPalette={
+                    comparisonData.postgresqlDatabase.status === 'success' ? 'green' :
+                    comparisonData.postgresqlDatabase.status === 'error' ? 'red' : 'gray'
+                  }
+                >
+                  {comparisonData.postgresqlDatabase.status}
+                </Badge>
+              </HStack>
+
+              <HStack justify="space-between">
+                <Text>Fetch Time</Text>
+                <Text fontWeight="medium" color="green.600">
+                  {comparisonData.postgresqlDatabase.fetchTime}ms
+                </Text>
+              </HStack>
+
+              {comparisonData.postgresqlDatabase.data && (
+                <Box>
+                  <Text fontSize="sm" color="fg.muted" mb={2} fontWeight="medium">Location Data:</Text>
+                  <Box 
+                    bg="green.50" 
+                    p={3} 
+                    borderRadius="md" 
+                    border="1px solid" 
+                    borderColor="green.200"
+                    maxH="200px"
+                    overflow="auto"
+                  >
+                    <Text fontSize="sm" fontFamily="mono" color="green.800" lineHeight="1.4">
+                      {JSON.stringify(comparisonData.postgresqlDatabase.data, null, 2)}
+                    </Text>
+                  </Box>
+                </Box>
+              )}
+
+              {comparisonData.postgresqlDatabase.error && (
+                <Alert.Root status="error" size="sm">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>{comparisonData.postgresqlDatabase.error}</Alert.Description>
+                  </Alert.Content>
+                </Alert.Root>
+              )}
+            </VStack>
+          </Card.Root>
         </VStack>
       )}
 

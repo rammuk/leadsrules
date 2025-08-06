@@ -61,15 +61,65 @@ export default function PublicQuestionnairePage() {
     }
   }
 
+  const handleLeaveBehindStrategy = () => {
+    const currentStep = questionnaire.steps[currentStepIndex]
+    if (!currentStep?.leaveBehindStrategy) return false
+    
+    // Save current step data for leave behind page
+    sessionStorage.setItem('leaveBehindData', JSON.stringify(currentStep))
+    
+    // Open next question in new tab if there is one
+    if (currentStepIndex < questionnaire.steps.length - 1) {
+      const nextStepIndex = currentStepIndex + 1
+      const nextStep = questionnaire.steps[nextStepIndex]
+      
+      // Create a new questionnaire data with all remaining steps
+      const remainingSteps = questionnaire.steps.slice(nextStepIndex)
+      const nextQuestionnaireData = {
+        ...questionnaire,
+        steps: remainingSteps,
+        originalTotalSteps: questionnaire.steps.length,
+        stepOffset: nextStepIndex
+      }
+      
+      // Open in new tab with data
+      const newTab = window.open('', '_blank')
+      if (newTab) {
+        // Set the data first, then navigate
+        newTab.sessionStorage.setItem('questionnaireData', JSON.stringify(nextQuestionnaireData))
+        newTab.location.href = '/public/questionnaire'
+      }
+      
+      // Redirect current page to leave behind page
+      setTimeout(() => {
+        router.push('/public/leave-behind')
+      }, 500)
+      return true
+    }
+    return false
+  }
+
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: value
     }))
+
+    // Check if current step has leave behind strategy
+    if (handleLeaveBehindStrategy()) {
+      return
+    }
   }
 
   const handleNext = () => {
     console.log('handleNext called', { currentStepIndex, totalSteps: questionnaire.steps.length })
+    
+    // Check if current step has leave behind strategy
+    if (handleLeaveBehindStrategy()) {
+      return
+    }
+    
+    // Normal navigation logic
     if (currentStepIndex < questionnaire.steps.length - 1) {
       setCurrentStepIndex(prev => prev + 1)
     } else {
@@ -282,7 +332,18 @@ export default function PublicQuestionnairePage() {
   }
   
   const currentStep = questionnaire.steps[currentStepIndex]
-  const progress = (currentStepIndex / (questionnaire.steps.length - 1)) * 100
+  
+  // Calculate progress based on original total steps if available
+  let totalSteps = questionnaire.steps.length
+  let currentStepForProgress = currentStepIndex
+  
+  if (questionnaire.originalTotalSteps && questionnaire.stepOffset !== undefined) {
+    // We're in a new tab with remaining steps, calculate based on original
+    totalSteps = questionnaire.originalTotalSteps
+    currentStepForProgress = questionnaire.stepOffset + currentStepIndex
+  }
+  
+  const progress = totalSteps <= 1 ? 100 : (currentStepForProgress / (totalSteps - 1)) * 100
   
   console.log('Render state:', { 
     currentStepIndex, 
@@ -340,7 +401,7 @@ export default function PublicQuestionnairePage() {
               <HStack justify="space-between">
                 <Text fontWeight="medium">Progress</Text>
                 <Text fontSize="sm" color="fg.muted">
-                  {showReview ? 'Review Answers' : `Step ${currentStepIndex + 1} of ${questionnaire.steps.length}`}
+                  {showReview ? 'Review Answers' : `Step ${currentStepForProgress + 1} of ${totalSteps}`}
                 </Text>
               </HStack>
               <Progress.Root 
@@ -354,13 +415,13 @@ export default function PublicQuestionnairePage() {
                 </Progress.Track>
               </Progress.Root>
               <HStack gap={2} justify="center">
-                {questionnaire.steps.map((step, index) => (
+                {Array.from({ length: totalSteps }, (_, index) => (
                   <Box
                     key={index}
                     w="8px"
                     h="8px"
                     borderRadius="full"
-                    bg={index <= currentStepIndex ? "blue.500" : "gray.300"}
+                    bg={index <= currentStepForProgress ? "blue.500" : "gray.300"}
                     transition="all 0.3s"
                   />
                 ))}
@@ -386,13 +447,36 @@ export default function PublicQuestionnairePage() {
                       <Card.Root key={stepIndex} variant="outline">
                         <Card.Body>
                           <VStack gap={4} align="stretch">
-                                                      <Heading size="sm" color="blue.600" bg="blue.50" p={3} borderRadius="md" border="1px solid" borderColor="blue.200">
-                            Step {stepIndex + 1}: {step.title}
-                          </Heading>
+                            {/* Step Title - Show only if showStepTitle is explicitly true */}
+                            {(step.showStepTitle === true || step.showStepTitle === "true") && (
+                              <Heading size="sm" color="blue.600" bg="blue.50" p={3} borderRadius="md" border="1px solid" borderColor="blue.200">
+                                Step {stepIndex + 1}: {step.title}
+                              </Heading>
+                            )}
                             
                             {step.questions && step.questions.map((question, questionIndex) => {
                               const answer = answers[question.id]
                               console.log('Rendering question:', questionIndex, question.id, answer)
+                              
+                              // Determine question title based on settings
+                              let questionTitle = ''
+                              const showStepTitle = step.showStepTitle === true || step.showStepTitle === "true"
+                              const showQuestionTitles = step.showQuestionTitles === true || step.showQuestionTitles === "true"
+                              
+                              if (showStepTitle && showQuestionTitles) {
+                                // Both step title and question titles are shown
+                                questionTitle = `${questionIndex + 1}. ${question.question}`
+                              } else if (!showStepTitle && showQuestionTitles) {
+                                // Step title is hidden, use question title as step title
+                                questionTitle = `${questionIndex + 1}. ${question.question}`
+                              } else if (showStepTitle && !showQuestionTitles) {
+                                // Step title is shown, but question titles are hidden
+                                questionTitle = ''
+                              } else {
+                                // Both are hidden or undefined, show question title as step title
+                                questionTitle = `${questionIndex + 1}. ${question.question}`
+                              }
+                              
                               return (
                                 <Box 
                                   key={question.id} 
@@ -414,39 +498,41 @@ export default function PublicQuestionnairePage() {
                                       bg="green.500"
                                     />
                                   )}
-                                                                  <VStack gap={2} align="stretch">
-                                  <Text fontWeight="semibold" fontSize="md" color="gray.800" mb={2}>
-                                    {questionIndex + 1}. {question.question}
-                                  </Text>
-                                  <Box>
-                                    <Text fontSize="sm" color="fg.muted" mb={1} fontWeight="medium">
-                                      Your Answer:
-                                    </Text>
-                                    <Box 
-                                      p={3} 
-                                      bg={answer ? "blue.50" : "gray.50"} 
-                                      borderRadius="lg" 
-                                      border="2px solid" 
-                                      borderColor={answer ? "blue.200" : "gray.200"}
-                                      minH="50px"
-                                      display="flex"
-                                      alignItems="center"
-                                      _hover={{
-                                        borderColor: answer ? "blue.300" : "gray.300",
-                                        transform: "translateY(-1px)",
-                                        boxShadow: "sm"
-                                      }}
-                                      transition="all 0.2s"
-                                    >
-                                      <Text 
-                                        color={answer ? "blue.700" : "gray.500"}
-                                        fontWeight={answer ? "medium" : "normal"}
-                                        fontSize="md"
-                                      >
-                                        {answer || 'No answer provided'}
+                                  <VStack gap={2} align="stretch">
+                                    {questionTitle && (
+                                      <Text fontWeight="semibold" fontSize="md" color="gray.800" mb={2}>
+                                        {questionTitle}
                                       </Text>
+                                    )}
+                                    <Box>
+                                      <Text fontSize="sm" color="fg.muted" mb={1} fontWeight="medium">
+                                        Your Answer:
+                                      </Text>
+                                      <Box 
+                                        p={3} 
+                                        bg={answer ? "blue.50" : "gray.50"} 
+                                        borderRadius="lg" 
+                                        border="2px solid" 
+                                        borderColor={answer ? "blue.200" : "gray.200"}
+                                        minH="50px"
+                                        display="flex"
+                                        alignItems="center"
+                                        _hover={{
+                                          borderColor: answer ? "blue.300" : "gray.300",
+                                          transform: "translateY(-1px)",
+                                          boxShadow: "sm"
+                                        }}
+                                        transition="all 0.2s"
+                                      >
+                                        <Text 
+                                          color={answer ? "blue.700" : "gray.500"}
+                                          fontWeight={answer ? "medium" : "normal"}
+                                          fontSize="md"
+                                        >
+                                          {answer || 'No answer provided'}
+                                        </Text>
+                                      </Box>
                                     </Box>
-                                  </Box>
                                   </VStack>
                                 </Box>
                               )
@@ -460,34 +546,79 @@ export default function PublicQuestionnairePage() {
               </VStack>
             ) : (
               <VStack gap={6} align="stretch">
-                <VStack gap={2} align="flex-start">
-                  <Heading size="md">Step {currentStepIndex + 1}: {currentStep.title}</Heading>
-                  {currentStep.description && (
-                    <Text color="fg.muted">{currentStep.description}</Text>
-                  )}
-                </VStack>
+                {/* Step Title - Show only if showStepTitle is explicitly true */}
+                {(currentStep.showStepTitle === true || currentStep.showStepTitle === "true") && (
+                  <VStack gap={2} align="flex-start">
+                    <HStack gap={2} align="center">
+                      <Heading size="md">Step {currentStepIndex + 1}: {currentStep.title}</Heading>
+                      {currentStep.leaveBehindStrategy && (
+                        <Badge colorPalette="orange" variant="subtle" size="sm">
+                          Leave Behind
+                        </Badge>
+                      )}
+                    </HStack>
+                    {currentStep.description && (
+                      <Text color="fg.muted">{currentStep.description}</Text>
+                    )}
+                    {currentStep.leaveBehindStrategy && (
+                      <Alert.Root colorPalette="orange" variant="subtle" size="sm">
+                        <Alert.Indicator />
+                        <Alert.Content>
+                          <Alert.Description>
+                            After answering, the next question will open in a new tab and this page will redirect to a leave behind page.
+                          </Alert.Description>
+                        </Alert.Content>
+                      </Alert.Root>
+                    )}
+                  </VStack>
+                )}
 
                 <VStack gap={4} align="stretch">
-                  {currentStep.questions.map((question, questionIndex) => (
-                    <Card.Root key={question.id} variant="outline">
-                      <Card.Body>
-                        <VStack gap={4} align="stretch">
-                          <HStack justify="space-between">
-                            <Text fontWeight="medium">
-                              {questionIndex + 1}. {question.question}
-                            </Text>
-                            {question.isRequired && (
-                              <Badge colorPalette="red" variant="subtle" size="sm">
-                                Required
-                              </Badge>
+                  {currentStep.questions.map((question, questionIndex) => {
+                    // Determine question title based on settings
+                    let questionTitle = ''
+                    const showStepTitle = currentStep.showStepTitle === true || currentStep.showStepTitle === "true"
+                    const showQuestionTitles = currentStep.showQuestionTitles === true || currentStep.showQuestionTitles === "true"
+                    
+                    if (showStepTitle && showQuestionTitles) {
+                      // Both step title and question titles are shown
+                      questionTitle = `${questionIndex + 1}. ${question.question}`
+                    } else if (!showStepTitle && showQuestionTitles) {
+                      // Step title is hidden, use question title as step title
+                      questionTitle = `${questionIndex + 1}. ${question.question}`
+                    } else if (showStepTitle && !showQuestionTitles) {
+                      // Step title is shown, but question titles are hidden
+                      questionTitle = ''
+                    } else {
+                      // Both are hidden or undefined, show question title as step title
+                      questionTitle = `${questionIndex + 1}. ${question.question}`
+                    }
+                    
+
+
+                    return (
+                      <Card.Root key={question.id} variant="outline">
+                        <Card.Body>
+                          <VStack gap={4} align="stretch">
+                            {questionTitle && (
+                              <HStack justify="space-between">
+                                <Text fontWeight="medium">
+                                  {questionTitle}
+                                </Text>
+                                {question.isRequired && (
+                                  <Badge colorPalette="red" variant="subtle" size="sm">
+                                    Required
+                                  </Badge>
+                                )}
+                              </HStack>
                             )}
-                          </HStack>
-                          
-                          {renderQuestion(question)}
-                        </VStack>
-                      </Card.Body>
-                    </Card.Root>
-                  ))}
+                            
+                            {renderQuestion(question)}
+                          </VStack>
+                        </Card.Body>
+                      </Card.Root>
+                    )
+                  })}
                 </VStack>
               </VStack>
             )}

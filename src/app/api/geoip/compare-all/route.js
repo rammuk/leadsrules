@@ -1,5 +1,6 @@
 import { getLocationFromIP } from '@/lib/geoip'
 import { getLocationFromAPI } from '@/lib/geoip-api'
+import { postgresqlGeoIP } from '@/lib/geoip-postgresql'
 
 import { getClientIP, getTestIP } from '@/lib/geoip-utils'
 import { prisma } from '@/lib/prisma'
@@ -20,7 +21,7 @@ export async function GET(request) {
       originalIP: clientIP,
       localDatabase: { status: 'disabled', fetchTime: 0, error: null },
       maxmindApi: { status: 'disabled', fetchTime: 0, error: null },
-      databaseLookup: { status: 'disabled', fetchTime: 0, error: null },
+      postgresqlDatabase: { status: 'disabled', fetchTime: 0, error: null },
       comparison: { fastestMethod: 'N/A', timeDifference: 0 },
       totalTime: 0
     }
@@ -70,7 +71,26 @@ export async function GET(request) {
       }
     }
 
-       // Database lookup method removed - table deleted
+    // Test PostgreSQL database method
+    try {
+      const postgresqlStart = performance.now()
+      const postgresqlLocation = await postgresqlGeoIP.lookup(testIP)
+      const postgresqlTime = performance.now() - postgresqlStart
+
+      results.postgresqlDatabase = {
+        status: postgresqlLocation.status,
+        fetchTime: postgresqlLocation.fetchTime,
+        data: postgresqlLocation.data,
+        error: postgresqlLocation.error
+      }
+    } catch (error) {
+      results.postgresqlDatabase = {
+        status: 'error',
+        fetchTime: 0,
+        data: null,
+        error: error.message
+      }
+    }
 
     // Compare results and find fastest
     const successfulMethods = []
@@ -80,6 +100,9 @@ export async function GET(request) {
     }
     if (results.maxmindApi.status === 'success') {
       successfulMethods.push({ name: 'MaxMind API', time: results.maxmindApi.fetchTime })
+    }
+    if (results.postgresqlDatabase.status === 'success') {
+      successfulMethods.push({ name: 'PostgreSQL Database', time: results.postgresqlDatabase.fetchTime })
     }
    
 
@@ -139,7 +162,7 @@ export async function POST(request) {
       originalIP: ip,
       localDatabase: { status: 'disabled', fetchTime: 0, error: null },
       maxmindApi: { status: 'disabled', fetchTime: 0, error: null },
-      databaseLookup: { status: 'disabled', fetchTime: 0, error: null },
+      postgresqlDatabase: { status: 'disabled', fetchTime: 0, error: null },
       comparison: { fastestMethod: 'N/A', timeDifference: 0 },
       totalTime: 0
     }
@@ -189,8 +212,26 @@ export async function POST(request) {
       }
     }
 
-   
-    // Database lookup method removed - table deleted
+    // Test PostgreSQL database method
+    try {
+      const postgresqlStart = performance.now()
+      const postgresqlLocation = await postgresqlGeoIP.lookup(ip)
+      const postgresqlTime = performance.now() - postgresqlStart
+
+      results.postgresqlDatabase = {
+        status: postgresqlLocation.status,
+        fetchTime: postgresqlLocation.fetchTime,
+        data: postgresqlLocation.data,
+        error: postgresqlLocation.error
+      }
+    } catch (error) {
+      results.postgresqlDatabase = {
+        status: 'error',
+        fetchTime: 0,
+        data: null,
+        error: error.message
+      }
+    }
 
     // Compare results and find fastest
     const successfulMethods = []
@@ -200,6 +241,9 @@ export async function POST(request) {
     }
     if (results.maxmindApi.status === 'success') {
       successfulMethods.push({ name: 'MaxMind API', time: results.maxmindApi.fetchTime })
+    }
+    if (results.postgresqlDatabase.status === 'success') {
+      successfulMethods.push({ name: 'PostgreSQL Database', time: results.postgresqlDatabase.fetchTime })
     }
  
 

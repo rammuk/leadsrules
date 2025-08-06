@@ -40,7 +40,9 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
     title: '',
     description: '',
     isActive: true,
-    leaveBehindStrategy: false
+    leaveBehindStrategy: false,
+    showStepTitle: true,
+    showQuestionTitles: true
   })
   const [viewStepModalIsOpen, setViewStepModalIsOpen] = useState(false)
   const [viewingStepIndex, setViewingStepIndex] = useState(null)
@@ -48,7 +50,9 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
     title: '',
     description: '',
     isActive: true,
-    leaveBehindStrategy: false
+    leaveBehindStrategy: false,
+    showStepTitle: true,
+    showQuestionTitles: true
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [draggedQuestion, setDraggedQuestion] = useState(null)
@@ -100,6 +104,8 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
           description: step.description || '',
           isActive: step.isActive,
           leaveBehindStrategy: step.leaveBehindStrategy || false,
+          showStepTitle: step.showStepTitle !== false,
+          showQuestionTitles: step.showQuestionTitles !== false,
           order: step.order,
           questions: Array.isArray(step.questions) ? step.questions.map(q => ({
             id: q.id,
@@ -165,7 +171,9 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
       title: '',
       description: '',
       isActive: true,
-      leaveBehindStrategy: false
+      leaveBehindStrategy: false,
+      showStepTitle: true,
+      showQuestionTitles: true
     })
     setStepModalIsOpen(true)
   }
@@ -182,6 +190,8 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
         description: newStepData.description,
         isActive: newStepData.isActive,
         leaveBehindStrategy: newStepData.leaveBehindStrategy || false,
+        showStepTitle: newStepData.showStepTitle !== false,
+        showQuestionTitles: newStepData.showQuestionTitles !== false,
         order: prev.steps.length,
         questions: []
       }]
@@ -196,7 +206,9 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
       title: step.title,
       description: step.description,
       isActive: step.isActive,
-      leaveBehindStrategy: step.leaveBehindStrategy || false
+      leaveBehindStrategy: step.leaveBehindStrategy || false,
+      showStepTitle: step.showStepTitle !== false,
+      showQuestionTitles: step.showQuestionTitles !== false
     })
     setViewStepModalIsOpen(true)
   }
@@ -478,19 +490,25 @@ export default function QuestionnaireForm({ mode = 'create', questionnaire = nul
        
 
         {error && (
-          <Alert status="error">
-            <Alert.Title>Error!</Alert.Title>
-            <Alert.Description>{error}</Alert.Description>
-          </Alert>
+          <Alert.Root status="error">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Error!</Alert.Title>
+              <Alert.Description>{error}</Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
         )}
 
         {mode === 'create' && questionnaireCreated && (
-          <Alert status="success">
-            <Alert.Title>Questionnaire Created!</Alert.Title>
-            <Alert.Description>
-              Your questionnaire has been created successfully. You can now add steps and questions to build your questionnaire.
-            </Alert.Description>
-          </Alert>
+          <Alert.Root status="success">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Questionnaire Created!</Alert.Title>
+              <Alert.Description>
+                Your questionnaire has been created successfully. You can now add steps and questions to build your questionnaire.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
         )}
 
         <form onSubmit={handleSubmit}>

@@ -89,6 +89,8 @@ model QuestionnaireStep {
   order               Int
   isActive            Boolean        @default(true)
   leaveBehindStrategy Boolean        @default(false)
+  showStepTitle       Boolean        @default(true)
+  showQuestionTitles  Boolean        @default(true)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   questionnaire       Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
@@ -158,4 +160,40 @@ model StepQuestionOption {
   stepQuestion   StepQuestion @relation(fields: [stepQuestionId], references: [id], onDelete: Cascade)
 }
 
+// MaxMind GeoIP2 Tables
+model GeoIP2Network {
+  id                           String   @id @default(cuid())
+  network                      Unsupported("cidr") @map("network")
+  geonameId                    Int?     @map("geoname_id")
+  registeredCountryGeonameId   Int?     @map("registered_country_geoname_id")
+  representedCountryGeonameId  Int?     @map("represented_country_geoname_id")
+  isAnonymousProxy             Boolean? @map("is_anonymous_proxy")
+  isSatelliteProvider          Boolean? @map("is_satellite_provider")
+  postalCode                   String?  @map("postal_code")
+  latitude                     Decimal?
+  longitude                    Decimal?
+  accuracyRadius               Int?     @map("accuracy_radius")
+  isAnycast                    Boolean? @map("is_anycast")
 
+  @@map("geoip2_network")
+}
+
+model GeoIP2Location {
+  geonameId                    Int      @map("geoname_id")
+  localeCode                   String   @map("locale_code")
+  continentCode                String?  @map("continent_code")
+  continentName                String?  @map("continent_name")
+  countryIsoCode               String?  @map("country_iso_code")
+  countryName                  String?  @map("country_name")
+  subdivision1IsoCode          String?  @map("subdivision_1_iso_code")
+  subdivision1Name             String?  @map("subdivision_1_name")
+  subdivision2IsoCode          String?  @map("subdivision_2_iso_code")
+  subdivision2Name             String?  @map("subdivision_2_name")
+  cityName                     String?  @map("city_name")
+  metroCode                    Int?     @map("metro_code")
+  timeZone                     String?  @map("time_zone")
+  isInEuropeanUnion            Boolean  @map("is_in_european_union")
+
+  @@id([geonameId, localeCode])
+  @@map("geoip2_location")
+}
