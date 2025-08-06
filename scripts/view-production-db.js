@@ -26,75 +26,52 @@ async function viewProductionDatabase() {
     console.log('\n📊 Database Statistics:')
     
     try {
-      const geoipCount = await productionPrisma.geoIPData.count()
-      console.log(`   GeoIPData records: ${geoipCount.toLocaleString()}`)
+      // Check for new GeoIP tables
+      const networkCount = await productionPrisma.geoIP2Network.count()
+      const locationCount = await productionPrisma.geoIP2Location.count()
       
-      if (geoipCount > 0) {
+      console.log(`   GeoIP2Network records: ${networkCount.toLocaleString()}`)
+      console.log(`   GeoIP2Location records: ${locationCount.toLocaleString()}`)
+      
+      if (networkCount > 0) {
         // Get sample records
-        console.log('\n🎯 Sample GeoIP Records:')
-        const samples = await productionPrisma.geoIPData.findMany({
-          take: 10,
-          orderBy: { createdAt: 'desc' }
+        console.log('\n🎯 Sample GeoIP Network Records:')
+        const samples = await productionPrisma.geoIP2Network.findMany({
+          take: 5,
+          include: {
+            location: true
+          }
         })
         
         samples.forEach((record, index) => {
-          console.log(`   ${index + 1}. ${record.ip} → ${record.city || 'N/A'}, ${record.region || 'N/A'}, ${record.country || 'N/A'}`)
+          console.log(`   ${index + 1}. Network: ${record.network} → Location: ${record.location?.cityName || 'N/A'}, ${record.location?.countryName || 'N/A'}`)
         })
         
-        // Get top countries
-        console.log('\n🌍 Top Countries:')
-        const countries = await productionPrisma.geoIPData.groupBy({
-          by: ['country'],
-          _count: { country: true },
-          orderBy: { _count: { country: 'desc' } },
-          take: 10
-        })
-        
-        countries.forEach((country, index) => {
-          console.log(`   ${index + 1}. ${country.country || 'Unknown'}: ${country._count.country.toLocaleString()} IPs`)
-        })
-        
-        // Get top cities
-        console.log('\n🏙️  Top Cities:')
-        const cities = await productionPrisma.geoIPData.groupBy({
-          by: ['city'],
-          _count: { city: true },
-          orderBy: { _count: { city: 'desc' } },
-          take: 10,
-          where: {
-            city: { not: null }
+        // Test IP lookup
+        console.log('\n🧪 Test IP Lookup:')
+        try {
+          const testResult = await productionPrisma.$queryRaw`
+            SELECT network::text as network
+            FROM geoip2_network 
+            WHERE network::cidr >>= '8.8.8.8'::inet 
+            LIMIT 1
+          `
+          if (testResult.length > 0) {
+            console.log(`   ✅ IP lookup test successful: ${testResult[0].network}`)
+          } else {
+            console.log(`   ⚠️  No matching network found for test IP`)
           }
-        })
-        
-        cities.forEach((city, index) => {
-          console.log(`   ${index + 1}. ${city.city}: ${city._count.city.toLocaleString()} IPs`)
-        })
-        
-        // Data quality stats
-        console.log('\n📋 Data Quality:')
-        const withCity = await productionPrisma.geoIPData.count({
-          where: { city: { not: null } }
-        })
-        const withRegion = await productionPrisma.geoIPData.count({
-          where: { region: { not: null } }
-        })
-        const withCoords = await productionPrisma.geoIPData.count({
-          where: { 
-            latitude: { not: null },
-            longitude: { not: null }
-          }
-        })
-        
-        console.log(`   Records with city data: ${withCity.toLocaleString()} (${((withCity / geoipCount) * 100).toFixed(1)}%)`)
-        console.log(`   Records with region data: ${withRegion.toLocaleString()} (${((withRegion / geoipCount) * 100).toFixed(1)}%)`)
-        console.log(`   Records with coordinates: ${withCoords.toLocaleString()} (${((withCoords / geoipCount) * 100).toFixed(1)}%)`)
+        } catch (error) {
+          console.log(`   ❌ IP lookup test failed: ${error.message}`)
+        }
         
       } else {
-        console.log('   ❌ No GeoIPData records found')
+        console.log('   ❌ No GeoIP2Network records found')
+        console.log('   💡 You may need to import GeoIP data to production')
       }
       
     } catch (error) {
-      console.log('❌ Error accessing GeoIPData table:', error.message)
+      console.log('❌ Error accessing GeoIP2Network table:', error.message)
       console.log('   This might mean the schema needs to be pushed to production')
     }
     
