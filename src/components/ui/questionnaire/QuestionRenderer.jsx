@@ -1,6 +1,7 @@
-import { Input, Textarea, Button, VStack, HStack, Text, Box } from '@chakra-ui/react'
+import { Input, Textarea, Button, VStack, HStack, Text, Box, Image } from '@chakra-ui/react'
 
 export default function QuestionRenderer({ question, value, onAnswerChange }) {
+
   switch (question.questionType) {
     case 'text':
       return (
@@ -55,8 +56,9 @@ export default function QuestionRenderer({ question, value, onAnswerChange }) {
               }}
               transition="all 0.2s"
             >
-              <VStack gap={2} align="flex-start" w="full">
-                <HStack gap={2} w="full">
+              <VStack gap={3} align="center" w="full">
+                {/* Radio button */}
+                {!option.image &&<HStack gap={2} w="full" justify="flex-start">
                   <Box
                     w="20px"
                     h="20px"
@@ -75,10 +77,24 @@ export default function QuestionRenderer({ question, value, onAnswerChange }) {
                   </Box>
                   <Text fontWeight="medium" fontSize="md">{option.description}</Text>
                 </HStack>
+  }
+                {/* Image display */}
                 {option.image && (
-                  <Text fontSize="sm" color="fg.muted" ml="28px">
-                    Image: {option.image}
-                  </Text>
+                  <VStack gap={2} align="center" w="full">
+                    <Image
+                      src={option.image}
+                      alt={option.description}
+                      maxW="200px"
+                      maxH="150px"
+                      objectFit="contain"
+                      borderRadius="md"
+                      border="1px solid"
+                      borderColor="gray.200"
+                    />
+                    <Text fontSize="sm" color="fg.muted" textAlign="center">
+                      {option.description}
+                    </Text>
+                  </VStack>
                 )}
               </VStack>
             </Button>

@@ -1,4 +1,4 @@
-import { VStack, Card, Heading, Text, Box, HStack } from '@chakra-ui/react'
+import { VStack, Card, Heading, Text, Box, HStack, Image } from '@chakra-ui/react'
 
 export default function ReviewSection({ questionnaire, answers }) {
   return (
@@ -83,8 +83,6 @@ export default function ReviewSection({ questionnaire, answers }) {
                               border="2px solid" 
                               borderColor={answer ? "blue.200" : "gray.200"}
                               minH="50px"
-                              display="flex"
-                              alignItems="center"
                               _hover={{
                                 borderColor: answer ? "blue.300" : "gray.300",
                                 transform: "translateY(-1px)",
@@ -92,13 +90,55 @@ export default function ReviewSection({ questionnaire, answers }) {
                               }}
                               transition="all 0.2s"
                             >
-                              <Text 
-                                color={answer ? "blue.700" : "gray.500"}
-                                fontWeight={answer ? "medium" : "normal"}
-                                fontSize="md"
-                              >
-                                {answer || 'No answer provided'}
-                              </Text>
+                              {/* Check if answer corresponds to an option with an image */}
+                              {question.questionType === 'options' && answer && question.options && (
+                                (() => {
+                                  const selectedOption = question.options.find(opt => opt.description === answer)
+                                  if (selectedOption && selectedOption.image) {
+                                    return (
+                                      <VStack gap={2} align="center">
+                                        <Image
+                                          src={selectedOption.image}
+                                          alt={selectedOption.description}
+                                          maxW="200px"
+                                          maxH="150px"
+                                          objectFit="contain"
+                                          borderRadius="md"
+                                        />
+                                        <Text 
+                                          color={answer ? "blue.700" : "gray.500"}
+                                          fontWeight={answer ? "medium" : "normal"}
+                                          fontSize="md"
+                                          textAlign="center"
+                                        >
+                                          {answer}
+                                        </Text>
+                                      </VStack>
+                                    )
+                                  }
+                                  return (
+                                    <Text 
+                                      color={answer ? "blue.700" : "gray.500"}
+                                      fontWeight={answer ? "medium" : "normal"}
+                                      fontSize="md"
+                                    >
+                                      {answer}
+                                    </Text>
+                                  )
+                                })()
+                              )}
+                              
+                              {/* Default text display for non-options or options without images */}
+                              {(!answer || question.questionType !== 'options' || !question.options || 
+                                !question.options.find(opt => opt.description === answer)?.image) && (
+                                <Text 
+                                  color={answer ? "blue.700" : "gray.500"}
+                                  fontWeight={answer ? "medium" : "normal"}
+                                  fontSize="md"
+                                >
+                                  {answer || 'No answer provided'}
+                                </Text>
+                              )}
                             </Box>
                           </Box>
                         </VStack>
